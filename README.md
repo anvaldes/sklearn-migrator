@@ -24,3 +24,5 @@ Thanks for all the contributions!
 
 Alberto Valdes Gonzalez.
 ML/AI | MLOps
+
+Have a nice day!
