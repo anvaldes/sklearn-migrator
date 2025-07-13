@@ -37,40 +37,38 @@ def _build_dtype_dict(dtypes, version_in):
         'itemsize': int(itemsize)
     }
 
+
 def _get_metadata(model, version_in):
     if _version_range_check(version_in, '0.21.3', '0.22.1'):
         return {
             'n_features_in': None,
             'n_features': model.n_features_,
             'n_outputs': model.n_outputs_,
-            'n_classes': model.n_classes_,
-            'version_in': version_in
+            'n_classes': model.n_classes_
         }
     elif _version_range_check(version_in, '0.23.0', '0.23.2'):
         return {
             'n_features_in': model.n_features_in_,
             'n_features': model.n_features_,
             'n_outputs': model.n_outputs_,
-            'n_classes': model.n_classes_,
-            'version_in': version_in
+            'n_classes': model.n_classes_
         }
     elif _version_range_check(version_in, '0.24.0', '1.1.3'):
         return {
             'n_features_in': model.n_features_in_,
             'n_features': model.n_features_,
             'n_outputs': model.n_outputs_,
-            'n_classes': None,
-            'version_in': version_in
+            'n_classes': None
         }
     elif version_in >= '1.2.0':
         return {
             'n_features_in': model.n_features_in_,
             'n_features': None,
             'n_outputs': model.n_outputs_,
-            'n_classes': None,
-            'version_in': version_in
+            'n_classes': None
         }
     return {}
+
 
 def serialize_decision_tree_reg(model, version_in):
     tree = model.tree_
@@ -89,6 +87,7 @@ def serialize_decision_tree_reg(model, version_in):
     metadata['version_sklearn_in'] = version_in
 
     return metadata
+
 
 def _build_tree_dtype(dtypes_dict, version_out):
     version_lt_1_3 = version_out < '1.3.0'
