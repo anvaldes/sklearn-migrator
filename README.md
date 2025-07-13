@@ -19,3 +19,5 @@ It is especially useful when models are trained using older versions of scikit-l
 ```bash
 pip install git+https://github.com/tu_usuario/sklearn_migrator.git
 ```
+
+Thanks for all the contributions!
