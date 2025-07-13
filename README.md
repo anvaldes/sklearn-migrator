@@ -26,3 +26,5 @@ Alberto Valdes Gonzalez.
 ML/AI | MLOps
 
 Have a nice day!
+
+New changes!
