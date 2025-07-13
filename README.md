@@ -22,4 +22,5 @@ pip install git+https://github.com/tu_usuario/sklearn_migrator.git
 
 Thanks for all the contributions!
 
-Alberto Valdes.# Test protection
+Alberto Valdes Gonzalez.
+ML/AI | MLOps
