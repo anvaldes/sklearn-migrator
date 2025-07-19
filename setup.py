@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='sklearn-migrator',  # Este será el nombre visible en PyPI
-    version='0.1.0',
+    version='0.3.0',
     author="Alberto Valdés",
     author_email="alberto.valdes.gonzalez.96.2@gmail.com",
     description="A utility to migrate scikit-learn models between versions.",
