@@ -3,7 +3,7 @@ from sklearn_migrator.classification.logistic_regression_clf import serialize_lo
 from sklearn_migrator.classification.logistic_regression_clf import deserialize_logistic_regression_clf
 import sklearn
 
-def test_decision_tree_clf():
+def test_logistic_regression_clf():
     X = [[0], [1], [2], [3]]
     y = [0, 1, 1, 0]
     
