@@ -2,9 +2,29 @@ import numpy as np
 from sklearn.tree._tree import Tree
 from sklearn.tree import DecisionTreeRegressor
 
-import warnings
-warnings.filterwarnings("ignore")
-
+all_features = [
+    'max_leaf_nodes',
+    'max_features_',
+    'min_weight_fraction_leaf',
+    'splitter',
+    'class_weight',
+    'min_impurity_decrease',
+    'min_samples_split',
+    'random_state',
+    'criterion',
+    'min_samples_leaf',
+    'max_depth',
+    'n_outputs_',
+    'max_features',
+    'min_impurity_split',
+    'n_classes_',
+    'classes_',
+    'presort',
+    'ccp_alpha',
+    'feature_names_in_',
+    'monotonic_cst'
+]
+ 
 
 def _version_range_check(version, lower, upper):
     return lower <= version <= upper
@@ -86,6 +106,31 @@ def serialize_decision_tree_reg(model, version_in):
     metadata['serialized_tree'] = serialized_tree
     metadata['version_sklearn_in'] = version_in
 
+    model_dict = model.__dict__
+    model_dict_keys = list(model_dict.keys())
+
+    default_values = {
+        'min_impurity_split': None,
+        'n_classes_': 1,
+        'classes_': None,
+        'presort': False,
+        'ccp_alpha': 0.0,
+        'feature_names_in_': None,
+        'monotonic_cst': None
+    }
+
+    kdv = list(default_values.keys())
+
+    other_params = {}
+
+    for af in all_features:
+        if (af in model_dict_keys) == False:
+            other_params[af] = default_values[af]
+        else:
+            other_params[af] = model_dict[af]
+
+    metadata['other_params'] = other_params
+
     return metadata
 
 
@@ -140,5 +185,11 @@ def deserialize_decision_tree_reg(data, version_out):
         new_tree.n_features_in_ = n_features
     elif version_out >= '1.0.0':
         new_tree.n_features_in_ = n_features
+
+    for af in all_features:
+        try:
+            new_tree.__dict__[af] = data['other_params'][af]
+        except:
+            pass
 
     return new_tree
