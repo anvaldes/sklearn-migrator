@@ -27,7 +27,7 @@ def serialize_linear_regression_reg(model, version_in):
 
     default_values = {
         'normalize': False,
-        'n_features_in_': len(model.coef_.tolist()[0]),
+        'n_features_in_': len(model.coef_) if model.coef_.ndim == 1 else len(model.coef_[0]),
         'positive': False,
         'feature_names_in_': None,
         'tol': 1e-6

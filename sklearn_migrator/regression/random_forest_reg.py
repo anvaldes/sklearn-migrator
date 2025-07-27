@@ -72,6 +72,7 @@ def serialize_random_forest_reg(model, version_in):
         other_params['n_features_in'] = None
 
     metadata['other_params'] = other_params
+    metadata['version_sklearn_in'] = version_in
 
     return metadata
 
