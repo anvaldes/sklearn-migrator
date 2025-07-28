@@ -25,12 +25,8 @@ all_features = [
     'monotonic_cst'
 ]
 
-def _version_range_check(version, lower, upper):
-    return lower <= version <= upper
-
-
 def _get_extended_nodes(nodes, version_in):
-    if '0.21.3' <= version_in < '1.3.0':
+    if '0.21.3' <= version_in < '1.3':
         return [node + (0,) for node in nodes]
     return nodes
 
@@ -41,7 +37,7 @@ def _build_dtype_dict(dtypes, version_in):
     offsets = [dtypes.fields[name][1] for name in field_names]
     itemsize = dtypes.itemsize
 
-    if '0.21.3' <= version_in < '1.3.0':
+    if '0.21.3' <= version_in < '1.3':
         return {
             'field_names': list(field_names + ('missing_go_to_left',)),
             'formats': [str(fmt) for fmt in formats + [np.dtype('uint8')]],
@@ -58,35 +54,23 @@ def _build_dtype_dict(dtypes, version_in):
 
 
 def _get_metadata(model, version_in):
-    if _version_range_check(version_in, '0.21.3', '0.22.1'):
-        return {
-            'n_features_in': None,
-            'n_features': model.n_features_,
-            'n_outputs': model.n_outputs_,
-            'n_classes': model.n_classes_
-        }
-    elif _version_range_check(version_in, '0.23.0', '0.23.2'):
-        return {
-            'n_features_in': model.n_features_in_,
-            'n_features': model.n_features_,
-            'n_outputs': model.n_outputs_,
-            'n_classes': model.n_classes_
-        }
-    elif _version_range_check(version_in, '0.24.0', '1.1.3'):
-        return {
-            'n_features_in': model.n_features_in_,
-            'n_features': model.n_features_,
-            'n_outputs': model.n_outputs_,
-            'n_classes': model.n_classes_
-        }
-    elif version_in >= '1.2.0':
-        return {
-            'n_features_in': model.n_features_in_,
-            'n_features': None,
-            'n_outputs': model.n_outputs_,
-            'n_classes': model.n_classes_
-        }
-    return {}
+
+    dict_metadata = {}
+
+    try:
+        dict_metadata['n_features_in'] = model.n_features_in_
+    except:
+        dict_metadata['n_features_in'] = None
+
+    try:
+        dict_metadata['n_features'] = model.n_features_
+    except:
+        dict_metadata['n_features'] = None
+
+    dict_metadata['n_classes'] = model.n_classes_
+    dict_metadata['n_outputs'] = model.n_outputs_
+
+    return dict_metadata
 
 
 def serialize_decision_tree_clf(model, version_in):
@@ -132,7 +116,7 @@ def serialize_decision_tree_clf(model, version_in):
 
 
 def _build_tree_dtype(dtypes_dict, version_out):
-    version_lt_1_3 = version_out < '1.3.0'
+    version_lt_1_3 = version_out < '1.3'
     num_elements = 7 if version_lt_1_3 else 8
 
     field_names = dtypes_dict['field_names'][:num_elements]
@@ -159,7 +143,7 @@ def deserialize_decision_tree_clf(data, version_out):
     nodes_array = np.array(serialized['nodes'], dtype=tree_dtype)
     values_array = np.array(serialized['values'])
 
-    if version_out >= '1.4.0' and version_in <= '1.3.2':
+    if version_out >= '1.4' and version_in <= '1.3.2':
 
         sums = values_array.sum(axis=2, keepdims=True)
         normalized_values = np.divide(values_array, sums)
@@ -182,13 +166,15 @@ def deserialize_decision_tree_clf(data, version_out):
     new_tree.n_outputs_ = n_outputs
     new_tree.n_classes_ = np.int64(data['n_classes'])
 
-    if _version_range_check(version_out, '0.21.3', '0.22.1'):
+    try:
         new_tree.n_features_ = n_features
-    elif _version_range_check(version_out, '0.23.0', '0.24.2'):
-        new_tree.n_features_ = n_features
+    except:
+        pass
+
+    try:
         new_tree.n_features_in_ = n_features
-    elif version_out >= '1.0.0':
-        new_tree.n_features_in_ = n_features
+    except:
+        pass
 
     for af in all_features:
         try:
@@ -197,3 +183,4 @@ def deserialize_decision_tree_clf(data, version_out):
             pass
 
     return new_tree
+
