@@ -10,7 +10,6 @@ all_features = [
     'class_weight',
     'min_impurity_decrease',
     'min_samples_split',
-    'random_state',
     'criterion',
     'min_samples_leaf',
     'max_depth',
@@ -25,8 +24,25 @@ all_features = [
     'monotonic_cst'
 ]
 
+
+def version_tuple(version):
+
+  version_split = version.split('.')
+
+  if len(version_split) == 1:
+    new_version = (int(version_split[0]), 0, 0)
+  elif len(version_split) == 2:
+    new_version = (int(version_split[0]), int(version_split[1]), 0)
+  elif len(version_split) == 3:
+    new_version = (int(version_split[0]), int(version_split[1]), int(version_split[2]))
+  else:
+    new_version = 'Formato no valido'
+
+  return new_version
+
+
 def _get_extended_nodes(nodes, version_in):
-    if '0.21.3' <= version_in < '1.3':
+    if (version_tuple('0.21.3') <= version_tuple(version_in)) and (version_tuple(version_in) < version_tuple('1.3')):
         return [node + (0,) for node in nodes]
     return nodes
 
@@ -37,7 +53,7 @@ def _build_dtype_dict(dtypes, version_in):
     offsets = [dtypes.fields[name][1] for name in field_names]
     itemsize = dtypes.itemsize
 
-    if '0.21.3' <= version_in < '1.3':
+    if (version_tuple('0.21.3') <= version_tuple(version_in)) and (version_tuple(version_in) < version_tuple('1.3')):
         return {
             'field_names': list(field_names + ('missing_go_to_left',)),
             'formats': [str(fmt) for fmt in formats + [np.dtype('uint8')]],
@@ -122,7 +138,7 @@ def serialize_decision_tree_reg(model, version_in):
 
 
 def _build_tree_dtype(dtypes_dict, version_out):
-    version_lt_1_3 = version_out < '1.3'
+    version_lt_1_3 = version_tuple(version_out) < version_tuple('1.3')
     num_elements = 7 if version_lt_1_3 else 8
 
     field_names = dtypes_dict['field_names'][:num_elements]
