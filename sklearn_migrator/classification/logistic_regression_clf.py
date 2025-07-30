@@ -5,7 +5,6 @@ all_features = [
     'warm_start',
     'penalty',
     'dual',
-    'random_state',
     'class_weight',
     'n_jobs',
     'max_iter',
