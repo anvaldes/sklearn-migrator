@@ -17,7 +17,6 @@ all_features = [
     'min_impurity_decrease',
     'max_features',
     'max_leaf_nodes',
-    'random_state',
     'n_jobs',
     'max_depth',
     'bootstrap',
