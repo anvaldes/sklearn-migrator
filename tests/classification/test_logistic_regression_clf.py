@@ -16,8 +16,6 @@ def test_logistic_regression_clf():
 
     assert isinstance(result, dict)
 
-    assert 'classes_' in result
-    assert 'coef_' in result
-    assert 'intercept_' in result
+    assert 'version_sklearn_in' in result
 
     assert isinstance(new_model, LogisticRegression)

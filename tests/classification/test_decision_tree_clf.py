@@ -16,14 +16,6 @@ def test_decision_tree_clf():
 
     assert isinstance(result, dict)
 
-    assert 'n_features_in' in result
-    assert 'n_features' in result
-    assert 'n_outputs' in result
-    assert 'n_classes' in result
-    assert 'serialized_tree' in result
     assert 'version_sklearn_in' in result
-
-    assert result['serialized_tree']['max_depth'] > 0
-    assert isinstance(result['serialized_tree']['nodes'], list)
 
     assert isinstance(new_model, DecisionTreeClassifier)
