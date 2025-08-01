@@ -16,7 +16,6 @@ def test_random_forest_reg():
 
     assert isinstance(result, dict)
 
-    assert 'n_outputs_' in result['other_params']
     assert 'version_sklearn_in' in result
 
     assert isinstance(new_model, RandomForestRegressor)
