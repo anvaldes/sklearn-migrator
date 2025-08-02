@@ -3,8 +3,6 @@
 **A Python library to serialize and migrate scikit-learn models across incompatible versions.**
 
 [![PyPI version](https://badge.fury.io/py/sklearn-migrator.svg)](https://pypi.org/project/sklearn-migrator/)
-[![Tests](https://github.com/yourusername/sklearn-migrator/actions/workflows/test.yml/badge.svg)](https://github.com/yourusername/sklearn-migrator/actions)
-[![License](https://img.shields.io/github/license/yourusername/sklearn-migrator.svg)](LICENSE)
 
 ---
 
@@ -45,6 +43,8 @@ Serialized models using `joblib` or `pickle` are often incompatible between vers
 | GradientBoostingRegressor | ✅         |
 | LinearRegression          | ✅         |
 
+We’re actively expanding support for more models. If you’d like to contribute, we’d love your help! Feel free to open a pull request or suggest new features.
+
 ---
 
 ## 🔢 Version Compatibility Matrix
@@ -74,6 +74,14 @@ There are 900 migration pairs (from-version → to-version).
 
 ---
 
+## 📂 Installation
+
+```bash
+pip install sklearn-migrator
+```
+
+---
+
 ## 💥 Use Cases
 
 * **Long-term model storage**: Store models in a future-proof format across teams and systems.
@@ -83,40 +91,74 @@ There are 900 migration pairs (from-version → to-version).
 
 ---
 
-## 📂 Installation
+## 1. Using two python environments
 
-```bash
-pip install sklearn-migrator
-```
-
----
-
-## 🚧 Example
+### a. Serialize the model
 
 ```python
-from sklearn.ensemble import RandomForestClassifier
-from sklearn_migrator.classification.random_forest_clf import (
-    serialize_random_forest_clf, deserialize_random_forest_clf
-)
 
-model = RandomForestClassifier().fit(X_train, y_train)
-
-# Serialize to dict
-data = serialize_random_forest_clf(model, version_in="1.0.2")
-
-# Save to JSON
 import json
-with open("model.json", "w") as f:
-    json.dump(data, f)
+import sklearn
+import numpy as np
+import pandas as pd
 
-# Load and deserialize
-with open("model.json") as f:
-    model_dict = json.load(f)
+from sklearn.ensemble import RandomForestRegressor
 
-new_model = deserialize_random_forest_clf(model_dict, version_out="1.4.2")
+from sklearn_migrator.regression.random_forest_reg import serialize_random_forest_reg
 
-# Use the model
-preds = new_model.predict(X_test)
+version_sklearn_in = sklearn.__version__
+
+model = RandomForestRegressor()
+model.fit(X_train, y_train)
+
+# If you want to compare output from this model and the new model with his new version
+y_pred = pd.DataFrame(model.predict(X_test))
+y_pred.to_csv('/y_pred.csv', index = False)
+
+all_data = serialize_random_forest_reg(model, version_sklearn_in)
+
+# Save it
+
+def convert(o):
+    if isinstance(o, (np.integer, np.int64)):
+        return int(o)
+    elif isinstance(o, (np.floating, np.float64)):
+        return float(o)
+    elif isinstance(o, np.ndarray):
+        return o.tolist()
+    else:
+        raise TypeError(f"Object of type {type(o).__name__} is not JSON serializable")
+
+with open("/input/model.json", "w") as f:
+    json.dump(all_data, f, default=convert)
+```
+
+### b. Desarialize the model
+
+```python
+import json
+import sklearn
+import numpy as np
+import pandas as pd
+
+from sklearn.ensemble import RandomForestRegressor
+
+from sklearn_migrator.regression.random_forest_reg import deserialize_random_forest_reg
+
+version_sklearn_out = sklearn.__version__
+
+with open("/input/model.json", "r") as f:
+    all_data = json.load(f)
+
+new_model_reg_rfr = deserialize_random_forest_reg(all_data, version_sklearn_out)
+
+# Now you have your model in this new version
+
+# If you want to compare the outputs
+y_pred_new = pd.DataFrame(new_model.predict(X_test))
+y_pred_new.to_csv('/y_pred_new.csv', index = False)
+
+# Of course you compare "y_pred.csv" with "y_pred_new.csv"
 ```
 
 ---
@@ -127,12 +169,6 @@ preds = new_model.predict(X_test)
 
 ```bash
 pytest tests/
-```
-
-### Linting
-
-```bash
-black .
 ```
 
 ---
@@ -160,7 +196,3 @@ MLOps Engineer | Open Source Contributor
 GitHub: [@anvaldes](https://github.com/anvaldes)
 
 ---
-
-## 📊 Citation
-
-Coming soon: Paper under preparation for JOSS submission.
