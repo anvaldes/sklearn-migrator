@@ -173,7 +173,9 @@ As you can see in this scenario is very useful work with Docker the create parti
 
 The main idea here is create a python script (input.py) to wrap the process of serialize the mmodel and other python script (output.py) to wrap the process of deserialize the model. 
 
-LINK
+- [environments_scikit_learn](https://github.com/anvaldes/environments_scikit_learn):  
+  Dockerized environments for testing `scikit-learn` across multiple versions.  
+  Perfect for validating migrations with `sklearn-migrator`.
 
 ---
 
