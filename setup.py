@@ -5,13 +5,17 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='sklearn-migrator',  # Este será el nombre visible en PyPI
-    version='0.8.1',
+    version='0.8.2',
     author="Alberto Valdés",
     author_email="alberto.valdes.gonzalez.96.2@gmail.com",
     description="A utility to migrate scikit-learn models between versions.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/anvaldes/sklearn_migrator",
+    project_urls={
+        "Documentation": "https://github.com/anvaldes/sklearn_migrator#readme",
+        "Source": "https://github.com/anvaldes/sklearn_migrator"
+    },
     packages=setuptools.find_packages(),
     install_requires=[
         'scikit-learn>=0.21.3',
