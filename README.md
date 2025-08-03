@@ -379,6 +379,7 @@ pytest tests/
 1. Fork the repository
 2. Create a new branch `feature/my-feature`
 3. Open a pull request
+4. Please ensure your pull request is tested for all combinations of functions; otherwise, it may be rejected.
 
 We welcome bug reports, suggestions, and contributions of new models.
 
