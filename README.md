@@ -177,6 +177,186 @@ The main idea here is create a python script (input.py) to wrap the process of s
   Dockerized environments for testing `scikit-learn` across multiple versions.  
   Perfect for validating migrations with `sklearn-migrator`.
 
+## 3. Example: Step by Step
+
+You have a Random Forest Classifier saved in a .pkl format and it is called "model.pkl". The version of this model is '1.5.0'.
+
+i. Create in your Desktop the next folder:
+
+```bash
+/test_github
+```
+
+ii. Go to the repo: https://github.com/anvaldes/environments_scikit_learn and find out for the Dockerfile and requirementst.txt for the corresponding input scikit-learn version.
+
+You will have this:
+
+```bash
+/test_github/input/1.5.0/Dockerfile_input
+/test_github/input/1.5.0/requirements_input.txt
+```
+
+iii. Go to the repo: https://github.com/anvaldes/environments_scikit_learn and find out for the Dockerfile and requirementst.txt for the output corresponding scikit-learn version.
+
+You will have this:
+
+```bash
+/test_github/output/1.7.0/Dockerfile_output
+/test_github/output/1.7.0/requirements_output.txt
+```
+
+iv. Now you create your input.py:
+
+```python
+import json
+import joblib
+import sklearn
+import numpy as np
+import pandas as pd
+from joblib import load
+
+from sklearn.ensemble import RandomForestClassifier
+
+from sklearn_migrator.classification.random_forest_clf import serialize_random_forest_clf
+
+version_sklearn_in = sklearn.__version__
+
+model = load('model.pkl')
+
+all_data = serialize_random_forest_clf(model, version_sklearn_in)
+
+def convert(o):
+    if isinstance(o, (np.integer, np.int64)):
+        return int(o)
+    elif isinstance(o, (np.floating, np.float64)):
+        return float(o)
+    elif isinstance(o, np.ndarray):
+        return o.tolist()
+    else:
+        raise TypeError(f"Object of type {type(o).__name__} is not JSON serializable")
+
+with open("input_model/all_data.json", "w") as f:
+    json.dump(all_data, f, default=convert)
+
+fake_row = np.array([[0.5, -1.2, 0.3, 1.1, -0.7, 0.9, 0.0, -0.3, 1.5, 0.2]])
+
+y_pred = pd.DataFrame(model.predict_proba(fake_row))
+y_pred.to_csv('input_model/y_pred.csv', index = False)
+```
+
+v. Now you create your output.py:
+
+```python
+import json
+import joblib
+import sklearn
+import numpy as np
+import pandas as pd
+from joblib import load
+
+from sklearn.ensemble import RandomForestClassifier
+
+from sklearn_migrator.classification.random_forest_clf import deserialize_random_forest_clf
+
+version_sklearn_out = sklearn.__version__
+
+with open("input_model/all_data.json", "r") as f:
+    all_data = json.load(f)
+
+new_model = deserialize_random_forest_clf(all_data, version_sklearn_out)
+
+joblib.dump(new_model, 'output_model/new_model.pkl')
+
+fake_row = np.array([[0.5, -1.2, 0.3, 1.1, -0.7, 0.9, 0.0, -0.3, 1.5, 0.2]])
+
+y_pred_new = pd.DataFrame(new_model.predict_proba(fake_row))
+y_pred_new.to_csv('output_model/y_pred_new.csv', index = False)
+```
+
+v. Now you copy all the files:
+
+```bash
+cp input/1.5.0/* output/1.7.0/* .
+```
+
+vi. Now you create two folders: 'input_model/' and 'output_model/'.
+
+vii. Execute the next commands in your terminal (you should be in the root of 'test_github/' folder)
+
+```bash
+docker build -f Dockerfile_input -t image_input_1.5.0 .
+docker build -f Dockerfile_output -t image_output_1.7.0 .
+
+docker run --rm \
+  -v "$(pwd)/input_model:/app/input_model" \
+  -v "$(pwd)/model.pkl:/app/model.pkl" \
+  image_input_1.5.0
+
+docker run --rm \
+  -v "$(pwd)/input_model:/app/input_model" \
+  -v "$(pwd)/output_model:/app/output_model" \
+  image_output_1.7.0
+```
+
+viii. Finally you can find your migrated model in the folder 'output_model' and its name is 'new_model.pkl'
+
+---
+
+## 🧩 Importing Functions
+
+Each model in `sklearn-migrator` provides a pair of functions:
+
+- `serialize_<model_name>` — Converts a trained model into a portable dictionary.
+- `deserialize_<model_name>` — Reconstructs the model in a target `scikit-learn` version from the dictionary.
+
+### 🧮 Regression Models
+
+```python
+from sklearn_migrator.regression.decision_tree_reg import (
+    serialize_decision_tree_reg,
+    deserialize_decision_tree_reg
+)
+
+from sklearn_migrator.regression.linear_regression_reg import (
+    serialize_linear_regression_reg,
+    deserialize_linear_regression_reg
+)
+
+from sklearn_migrator.regression.random_forest_reg import (
+    serialize_random_forest_reg,
+    deserialize_random_forest_reg
+)
+
+from sklearn_migrator.regression.gradient_boosting_reg import (
+    serialize_gradient_boosting_reg,
+    deserialize_gradient_boosting_reg
+)
+```
+
+### 🧮 Classification Models
+
+```python
+from sklearn_migrator.classification.decision_tree_clf import (
+    serialize_decision_tree_clf,
+    deserialize_decision_tree_clf
+)
+
+from sklearn_migrator.classification.logistic_regression_clf import (
+    serialize_logistic_regression_clf,
+    deserialize_logistic_regression_clf
+)
+
+from sklearn_migrator.classification.random_forest_clf import (
+    serialize_random_forest_clf,
+    deserialize_random_forest_clf
+)
+
+from sklearn_migrator.classification.gradient_boosting_clf import (
+    serialize_gradient_boosting_clf,
+    deserialize_gradient_boosting_clf
+)
+```
+
 ---
 
 ## 🔧 Development
