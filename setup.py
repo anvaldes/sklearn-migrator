@@ -11,10 +11,10 @@ setuptools.setup(
     description="A utility to migrate scikit-learn models between versions.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/anvaldes/sklearn_migrator",
+    url="https://github.com/anvaldes/sklearn-migrator",
     project_urls={
-        "Documentation": "https://github.com/anvaldes/sklearn_migrator#readme",
-        "Source": "https://github.com/anvaldes/sklearn_migrator"
+        "Documentation": "https://github.com/anvaldes/sklearn-migrator#readme",
+        "Source": "https://github.com/anvaldes/sklearn-migrator"
     },
     packages=setuptools.find_packages(),
     install_requires=[
