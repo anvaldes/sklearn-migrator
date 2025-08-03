@@ -93,9 +93,9 @@ pip install sklearn-migrator
 
 ## 1. Using two python environments
 
-You can serialized the model from a environment with a scikit-learn version (for example '1.5.0') and then you can deserialized the model from another environment with a other version (for exmaple '1.7.0').
+You can serialized the model from a environment with a scikit-learn version (for example `1.5.0`) and then you can deserialized the model from another environment with a other version (for exmaple `1.7.0`).
 
-The deserialized model has the version of the environment where you deserialized it. In this case '1.7.0'.
+The deserialized model has the version of the environment where you deserialized it. In this case `1.7.0`.
 
 As you can see is very important understand what is the version of scikit learn from you want to migrate to create and environment with this version to deserialized the model. On the other side you have to understand to what version you want to migrate to again create and environment with this version of scikit-learn.
 
@@ -179,7 +179,7 @@ The main idea here is create a python script (input.py) to wrap the process of s
 
 ## 3. Example: Step by Step
 
-You have a Random Forest Classifier saved in a .pkl format and it is called "model.pkl". The version of this model is '1.5.0'.
+You have a Random Forest Classifier saved in a `.pkl` format and it is called `model.pkl`. The version of this model is `1.5.0`.
 
 i. Create in your Desktop the next folder:
 
@@ -187,7 +187,9 @@ i. Create in your Desktop the next folder:
 /test_github
 ```
 
-ii. Go to the repo: https://github.com/anvaldes/environments_scikit_learn and find out for the Dockerfile and requirementst.txt for the corresponding input scikit-learn version.
+And copy your `model.pkl` in this folder.
+
+ii. Go to the repo: https://github.com/anvaldes/environments_scikit_learn and find out for the Dockerfile and requirements.txt for the corresponding input scikit-learn version.
 
 You will have this:
 
@@ -196,7 +198,7 @@ You will have this:
 /test_github/input/1.5.0/requirements_input.txt
 ```
 
-iii. Go to the repo: https://github.com/anvaldes/environments_scikit_learn and find out for the Dockerfile and requirementst.txt for the output corresponding scikit-learn version.
+iii. Go to the repo: https://github.com/anvaldes/environments_scikit_learn and find out for the Dockerfile and requirements.txt for the output corresponding scikit-learn version.
 
 You will have this:
 
@@ -205,7 +207,7 @@ You will have this:
 /test_github/output/1.7.0/requirements_output.txt
 ```
 
-iv. Now you create your input.py:
+iv. Now you create your `input.py`:
 
 ```python
 import json
@@ -244,7 +246,7 @@ y_pred = pd.DataFrame(model.predict_proba(fake_row))
 y_pred.to_csv('input_model/y_pred.csv', index = False)
 ```
 
-v. Now you create your output.py:
+v. Now you create your `output.py`:
 
 ```python
 import json
@@ -279,9 +281,9 @@ v. Now you copy all the files:
 cp input/1.5.0/* output/1.7.0/* .
 ```
 
-vi. Now you create two folders: 'input_model/' and 'output_model/'.
+vi. Now you create two folders: `input_model/` and `output_model/`.
 
-vii. Execute the next commands in your terminal (you should be in the root of 'test_github/' folder)
+vii. Execute the next commands in your terminal (you should be in the root of `test_github/` folder)
 
 ```bash
 docker build -f Dockerfile_input -t image_input_1.5.0 .
@@ -298,16 +300,19 @@ docker run --rm \
   image_output_1.7.0
 ```
 
-viii. Finally you can find your migrated model in the folder 'output_model' and its name is 'new_model.pkl'
+viii. Finally you can find your migrated model in the folder `/output_model` and its name is `new_model.pkl`. This model is a scikit-learn model of version `1.7.0`.
 
 ---
 
-## 🧩 Importing Functions
+## 🧾 Function Signatures & Parameters
 
 Each model in `sklearn-migrator` provides a pair of functions:
 
-- `serialize_<model_name>` — Converts a trained model into a portable dictionary.
-- `deserialize_<model_name>` — Reconstructs the model in a target `scikit-learn` version from the dictionary.
+- `serialize_<model_name>(model, version_in)`  
+  Converts a trained scikit-learn model into a portable, version-agnostic dictionary.
+
+- `deserialize_<model_name>(data, version_out)`  
+  Reconstructs a scikit-learn model in a specific target version using the serialized dictionary.
 
 ### 🧮 Regression Models
 
