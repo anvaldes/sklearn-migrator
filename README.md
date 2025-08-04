@@ -4,6 +4,10 @@
 
 [![PyPI version](https://badge.fury.io/py/sklearn-migrator.svg)](https://pypi.org/project/sklearn-migrator/)
 
+<p align="center">
+  <img src="images/Logo_Lateral.png" alt="sklearn-migrator" width="200"/>
+</p>
+
 ---
 
 ## 🚀 Motivation
@@ -167,17 +171,7 @@ y_pred_new.to_csv('y_pred_new.csv', index = False)
 # Of course you compare "y_pred.csv" with "y_pred_new.csv"
 ```
 
-## 2. Using Docker
-
-As you can see in this scenario is very useful work with Docker the create particular environments. To help you we created 30 examples of Dockerfile for the input (with all the 30 differents versions of scikit-learn) and another 30 examples of Dockerfile for the output (again with all the 30 differents versions of scikit-learn).
-
-The main idea here is create a python script (input.py) to wrap the process of serialize the mmodel and other python script (output.py) to wrap the process of deserialize the model. 
-
-- [environments_scikit_learn](https://github.com/anvaldes/environments_scikit_learn):  
-  Dockerized environments for testing `scikit-learn` across multiple versions.  
-  Perfect for validating migrations with `sklearn-migrator`.
-
-## 3. Example: Step by Step
+## 2. Docker: Step by Step
 
 You have a Random Forest Classifier saved in a `.pkl` format and it is called `model.pkl`. The version of this model is `1.5.0`.
 
@@ -275,15 +269,15 @@ y_pred_new = pd.DataFrame(new_model.predict_proba(fake_row))
 y_pred_new.to_csv('output_model/y_pred_new.csv', index = False)
 ```
 
-v. Now you copy all the files:
+vi. Now you copy all the files:
 
 ```bash
 cp input/1.5.0/* output/1.7.0/* .
 ```
 
-vi. Now you create two folders: `input_model/` and `output_model/`.
+vii. Now you create two folders: `input_model/` and `output_model/`.
 
-vii. Execute the next commands in your terminal (you should be in the root of `test_github/` folder)
+viii. Execute the next commands in your terminal (you should be in the root of `test_github/` folder)
 
 ```bash
 docker build -f Dockerfile_input -t image_input_1.5.0 .
@@ -300,7 +294,7 @@ docker run --rm \
   image_output_1.7.0
 ```
 
-viii. Finally you can find your migrated model in the folder `/output_model` and its name is `new_model.pkl`. This model is a scikit-learn model of version `1.7.0`.
+ix. Finally you can find your migrated model in the folder `/output_model` and its name is `new_model.pkl`. This model is a scikit-learn model of version `1.7.0`.
 
 ---
 
