@@ -3,6 +3,7 @@
 **A Python library to serialize and migrate scikit-learn models across incompatible versions.**
 
 [![PyPI version](https://badge.fury.io/py/sklearn-migrator.svg)](https://pypi.org/project/sklearn-migrator/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16790738.svg)](https://doi.org/10.5281/zenodo.16790738)
 
 <p align="center">
   <img src="images/Logo_Lateral.png" alt="sklearn-migrator" width="200"/>
