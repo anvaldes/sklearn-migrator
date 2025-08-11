@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+title: "sklearn-migrator"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - family-names: Valdés
+    given-names: Alberto
+    orcid: "https://orcid.org/0009-0000-0752-8519"
+repository-code: "https://github.com/anvaldes/sklearn-migrator"
+license: MIT
+version: 0.1.0
+date-released: 2025-08-10
+preferred-citation:
+  type: article
+  title: "sklearn-migrator: Safely Migrating scikit-learn Models Across Versions"
+  authors:
+    - family-names: Valdés
+      given-names: Alberto
+      orcid: "https://orcid.org/0009-0000-0752-8519"
+  year: 2025
+  journal: "Journal of Open Source Software"
