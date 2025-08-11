@@ -2,8 +2,13 @@
 
 **A Python library to serialize and migrate scikit-learn models across incompatible versions.**
 
-[![PyPI version](https://badge.fury.io/py/sklearn-migrator.svg)](https://pypi.org/project/sklearn-migrator/)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16790738.svg)](https://doi.org/10.5281/zenodo.16790738)
+[![PyPI version](https://img.shields.io/pypi/v/sklearn-migrator.svg)](https://pypi.org/project/sklearn-migrator/)
+![Python versions](https://img.shields.io/pypi/pyversions/sklearn-migrator.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/anvaldes/sklearn-migrator/actions/workflows/ci.yml/badge.svg)](https://github.com/anvaldes/sklearn-migrator/actions)
+[![codecov](https://codecov.io/gh/anvaldes/sklearn-migrator/branch/main/graph/badge.svg)](https://codecov.io/gh/anvaldes/sklearn-migrator)
+[![DOI](https://zenodo.org/badge/DOI/10.xxxxx/zenodo.xxxxx.svg)](https://doi.org/10.xxxxx/zenodo.xxxxx)
+
 
 <p align="center">
   <img src="images/Logo_Lateral.png" alt="sklearn-migrator" width="200"/>
