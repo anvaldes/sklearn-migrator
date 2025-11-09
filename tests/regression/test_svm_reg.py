@@ -3,7 +3,7 @@ from sklearn_migrator.regression.svm_reg import serialize_svr
 from sklearn_migrator.regression.svm_reg import deserialize_svr
 import sklearn
 
-def test_random_forest_reg():
+def test_svm_reg():
     X = [[0], [1], [2], [3]]
     y = [0, 1, 2, 3]
     
