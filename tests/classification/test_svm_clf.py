@@ -5,7 +5,7 @@ import sklearn
 
 def test_svm_clf():
     X = [[0], [1], [2], [3]]
-    y = [0, 1, 2, 3]
+    y = [0, 1, 0, 1]
     
     model = SVC()
     model.fit(X, y)
