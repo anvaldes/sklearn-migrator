@@ -1,6 +1,6 @@
 from sklearn.neural_network import MLPClassifier
-from sklearn_migrator.classification.mlp_reg import serialize_mlp_clf
-from sklearn_migrator.classification.mlp_reg import deserialize_mlp_clf
+from sklearn_migrator.classification.mlp_clf import serialize_mlp_clf
+from sklearn_migrator.classification.mlp_clf import deserialize_mlp_clf
 import sklearn
 
 def test_mlp_clf():
