@@ -3,7 +3,7 @@ from sklearn_migrator.regression.mlp_reg import serialize_mlp_reg
 from sklearn_migrator.regression.mlp_reg import deserialize_mlp_reg
 import sklearn
 
-def test_ridge_reg():
+def test_mlp_reg():
     X = [[0], [1], [2], [3]]
     y = [0, 1, 2, 3]
     
