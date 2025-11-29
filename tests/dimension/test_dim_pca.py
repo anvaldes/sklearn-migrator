@@ -1,8 +1,8 @@
 import sklearn
 import numpy as np
 from sklearn.decomposition import PCA
-from sklearn_migrator.dim_reduction.pca import serialize_pca
-from sklearn_migrator.dim_reduction.pca import deserialize_pca
+from sklearn_migrator.dimension.pca import serialize_pca
+from sklearn_migrator.dimension.pca import deserialize_pca
 
 def test_pca():
 
