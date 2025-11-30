@@ -1,42 +1,43 @@
 import numpy as np
-from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
 
 all_features = [
-    '_fit_svd_solver',
-    'components_',
-    'copy',
-    'explained_variance_',
-    'explained_variance_ratio_',
-    'iterated_power',
-    'mean_',
-    'n_components',
-    'n_components_',
-    'n_samples_',
-    'noise_variance_',
-    'singular_values_',
-    'svd_solver',
+    'algorithm',
+    'cluster_centers_',
+    'copy_x', 
+    'inertia_',
+    'init',
+    'labels_',
+    'max_iter',
+    'n_clusters',
+    'n_init', 
+    'n_iter_',
     'tol',
-    'whiten',
-    'feature_names_in_',
-    'n_features_',
-    'n_features_in_',
-    'power_iteration_normalizer'
-    ]
+    'verbose',
+    '_algorithm',
+    '_n_features_out', 
+    '_n_init',
+    '_n_threads',
+    '_tol', 
+    'feature_names_in_', 
+    'n_features_in_', 
+    'n_jobs',
+    'precompute_distances'
+]
 
-
-def serialize_pca(model, version_in):
+def serialize_k_means(model, version_in):
 
     metadata = {}
 
     init_params = model.get_params()
 
     try:
-        del init_params['n_oversamples']
+        del init_params['n_jobs']
     except:
         pass
 
     try:
-        del init_params['power_iteration_normalizer']
+        del init_params['precompute_distances']
     except:
         pass
 
@@ -46,11 +47,16 @@ def serialize_pca(model, version_in):
     model_dict_keys = list(model_dict.keys())
 
     default_values = {
+        '_algorithm': 'lloyd',
+        '_n_features_out': len(model.cluster_centers_),
+        '_n_init': 1,
+        '_n_threads': 1,
+        '_tol': model.tol,
         'feature_names_in_': None,
-        'n_features_': len(model_dict['mean_']),
-        'n_features_in_': len(model_dict['mean_']),
-        'power_iteration_normalizer': 'auto'
-        }
+        'n_features_in_': len(model.cluster_centers_[0]),
+        'n_jobs': 1,
+        'precompute_distances': 'auto'
+    }
 
     other_params = {}
     
@@ -65,19 +71,16 @@ def serialize_pca(model, version_in):
 
     return metadata
 
-
-def deserialize_pca(data, version_out):
+def deserialize_k_means(data, version_out):
     version_in = data['version_sklearn_in']
     init_params = data['init_params']
 
-    new_model = PCA(**init_params)
+    new_model = KMeans(**init_params)
 
     array_fields = [
-        'components_',
-        'explained_variance_',
-        'explained_variance_ratio_',
-        'mean_',
-        'singular_values_'
+        'cluster_centers_',
+        'labels_',
+        'feature_names_in_'
     ]
 
     other_params = data['other_params']
