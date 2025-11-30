@@ -13,7 +13,7 @@ def test_pca():
         [10.0, 11.0, 12.0]
     ])
 
-    model = KMeans()
+    model = KMeans(n_clusters=2)
     model.fit(X)
 
     version = sklearn.__version__
