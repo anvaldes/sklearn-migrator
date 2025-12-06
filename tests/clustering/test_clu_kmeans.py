@@ -4,7 +4,7 @@ from sklearn.cluster import KMeans
 from sklearn_migrator.clustering.k_means import serialize_k_means
 from sklearn_migrator.clustering.k_means import deserialize_k_means
 
-def test_pca():
+def test_clu_kmeans():
 
     X = np.array([
         [1.0, 2.0, 3.0],
