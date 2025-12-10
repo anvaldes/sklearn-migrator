@@ -16,50 +16,100 @@
 
 ---
 
-## 🚀 Motivation
+# 🚀 Motivation
 
-Serialized models using `joblib` or `pickle` are often incompatible between versions of `scikit-learn`, making it difficult to:
+Machine learning teams frequently store trained scikit-learn models using `pickle` or `joblib`.  
+However:
 
-* Deploy models in production after library upgrades
-* Migrate models across environments
-* Share models across teams with different dependencies
+### ❌ These serialized models **break** when scikit-learn versions change  
+- Internal attributes change  
+- APIs evolve (e.g., `affinity → metric`)  
+- Tree and boosting internals get reorganized  
+- New default parameters appear  
 
-**`sklearn-migrator`** allows you to:
-
-* ✅ Serialize models into portable Python dictionaries (JSON-compatible)
-* ✅ Migrate models across `scikit-learn` versions
-* ✅ Inspect model structure without using `pickle`
-* ✅ Ensure reproducibility in long-term ML projects
+### ❌ This creates real problems:
+- Production services fail after dependency upgrades  
+- Research becomes non-reproducible  
+- Long-term model governance becomes impossible  
+- Models can't be migrated or audited reliably  
 
 ---
 
-## 💡 Supported Models
 
-### Classification Models
+# ✅ What `sklearn-migrator` provides
 
-| Model                      | Supported |
-| -------------------------- | --------- |
-| DecisionTreeClassifier     | ✅         |
-| RandomForestClassifier     | ✅         |
-| GradientBoostingClassifier | ✅         |
-| LogisticRegression         | ✅         |
+### ✔ Serialize any supported model into a **JSON-compatible dictionary**  
+### ✔ Deserialize and reconstruct the model **in a different scikit-learn version**  
+### ✔ Remove dependency on pickle/joblib for long-term storage  
+### ✔ Enable reproducible ML pipelines across environments  
 
-### Regression Models
+This library has been validated across **900 version migration pairs** (from → to), covering:
 
-| Model                     | Supported |
-| ------------------------- | --------- |
-| DecisionTreeRegressor     | ✅         |
-| RandomForestRegressor     | ✅         |
-| GradientBoostingRegressor | ✅         |
-| LinearRegression          | ✅         |
+0.21.3 → 1.7.2
 
-We’re actively expanding support for more models. If you’d like to contribute, we’d love your help! Feel free to open a pull request or suggest new features.
+---
+
+# 💡 Supported Models (21 models)
+
+`sklearn-migrator` supports **21 core models** across classification, regression, clustering, and dimensionality reduction.
+
+## 📘 Classification
+
+| Model                        | Supported |
+|------------------------------|-----------|
+| DecisionTreeClassifier       | ✅ |
+| RandomForestClassifier       | ✅ |
+| GradientBoostingClassifier   | ✅ |
+| LogisticRegression           | ✅ |
+| KNeighborsClassifier         | ✅ |
+| SVC (Support Vector Classifier) | ✅ |
+| MLPClassifier                | ✅ |
+
+---
+
+## 📗 Regression
+
+| Model                        | Supported |
+|------------------------------|-----------|
+| DecisionTreeRegressor        | ✅ |
+| RandomForestRegressor        | ✅ |
+| GradientBoostingRegressor    | ✅ |
+| LinearRegression             | ✅ |
+| Ridge                        | ✅ |
+| Lasso                        | ✅ |
+| KNeighborsRegressor          | ✅ |
+| SVR (Support Vector Regressor) | ✅ |
+| AdaBoostRegressor            | ✅ |
+| MLPRegressor                 | ✅ |
+
+---
+
+## 📙 Clustering
+
+| Model                | Supported |
+|----------------------|-----------|
+| KMeans               | ✅ |
+| MiniBatchKMeans      | ✅ |
+
+---
+
+## 📘 Dimensionality Reduction
+
+| Model | Supported |
+|-------|-----------|
+| PCA   | ✅ |
+
+---
 
 ---
 
 ## 🔢 Version Compatibility Matrix
 
-This library supports migration across the following `scikit-learn` versions:
+The library supports model migrations across the full matrix:
+
+- **32 versions**  
+- **1.024 migration pairs**  
+- Fully tested using automated environments
 
 ```python
 versions = [
@@ -67,20 +117,18 @@ versions = [
     '0.24.0', '0.24.1', '0.24.2', '1.0.0', '1.0.1', '1.0.2',
     '1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.2.0', '1.2.1', '1.2.2',
     '1.3.0', '1.3.1', '1.3.2', '1.4.0', '1.4.2', '1.5.0', '1.5.1',
-    '1.5.2', '1.6.0', '1.6.1', '1.7.0'
+    '1.5.2', '1.6.0', '1.6.1', '1.7.0', '1.7.1', '1.7.2'
 ]
 ```
 
-There are 900 migration pairs (from-version → to-version).
-
-| From \ To | 0.21.3 | 0.22.0 | ... | 1.7.0 |
+| From \ To | 0.21.3 | 0.22.0 | ... | 1.7.2 |
 | --------- | ------ | ------ | --- | ----- |
 | 0.21.3    | ✅      | ✅      | ... | ✅     |
 | 0.22.0    | ✅      | ✅      | ... | ✅     |
 | ...       | ...    | ...    | ... | ...   |
-| 1.7.0     | ✅      | ✅      | ... | ✅     |
+| 1.7.2     | ✅      | ✅      | ... | ✅     |
 
-> ⚠️ All 900 combinations were tested and validated using unit tests across real environments.
+> ⚠️ All 1.024 combinations and 21 models were tested and validated in real environments.
 
 ---
 
@@ -314,53 +362,127 @@ Each model in `sklearn-migrator` provides a pair of functions:
 - `deserialize_<model_name>(data, version_out)`  
   Reconstructs a scikit-learn model in a specific target version using the serialized dictionary.
 
-### 🧮 Regression Models
-
-```python
-from sklearn_migrator.regression.decision_tree_reg import (
-    serialize_decision_tree_reg,
-    deserialize_decision_tree_reg
-)
-
-from sklearn_migrator.regression.linear_regression_reg import (
-    serialize_linear_regression_reg,
-    deserialize_linear_regression_reg
-)
-
-from sklearn_migrator.regression.random_forest_reg import (
-    serialize_random_forest_reg,
-    deserialize_random_forest_reg
-)
-
-from sklearn_migrator.regression.gradient_boosting_reg import (
-    serialize_gradient_boosting_reg,
-    deserialize_gradient_boosting_reg
-)
-```
-
-### 🧮 Classification Models
+### 🧠 Classification Models
 
 ```python
 from sklearn_migrator.classification.decision_tree_clf import (
     serialize_decision_tree_clf,
-    deserialize_decision_tree_clf
-)
-
-from sklearn_migrator.classification.logistic_regression_clf import (
-    serialize_logistic_regression_clf,
-    deserialize_logistic_regression_clf
-)
-
-from sklearn_migrator.classification.random_forest_clf import (
-    serialize_random_forest_clf,
-    deserialize_random_forest_clf
+    deserialize_decision_tree_clf,
 )
 
 from sklearn_migrator.classification.gradient_boosting_clf import (
     serialize_gradient_boosting_clf,
-    deserialize_gradient_boosting_clf
+    deserialize_gradient_boosting_clf,
+)
+
+from sklearn_migrator.classification.knn_clf import (
+    serialize_knn_clf,
+    deserialize_knn_clf,
+)
+
+from sklearn_migrator.classification.logistic_regression_clf import (
+    serialize_logistic_regression_clf,
+    deserialize_logistic_regression_clf,
+)
+
+from sklearn_migrator.classification.mlp_clf import (
+    serialize_mlp_clf,
+    deserialize_mlp_clf,
+)
+
+from sklearn_migrator.classification.random_forest_clf import (
+    serialize_random_forest_clf,
+    deserialize_random_forest_clf,
+)
+
+from sklearn_migrator.classification.svm_clf import (
+    serialize_svc,
+    deserialize_svc,
 )
 ```
+
+### 🧮 Regression Models
+
+```python
+from sklearn_migrator.regression.adaboost_reg import (
+    serialize_adaboost_reg,
+    deserialize_adaboost_reg,
+)
+
+from sklearn_migrator.regression.decision_tree_reg import (
+    serialize_decision_tree_reg,
+    deserialize_decision_tree_reg,
+)
+
+from sklearn_migrator.regression.gradient_boosting_reg import (
+    serialize_gradient_boosting_reg,
+    deserialize_gradient_boosting_reg,
+)
+
+from sklearn_migrator.regression.knn_reg import (
+    serialize_knn_reg,
+    deserialize_knn_reg,
+)
+
+from sklearn_migrator.regression.lasso_reg import (
+    serialize_lasso_reg,
+    deserialize_lasso_reg,
+)
+
+from sklearn_migrator.regression.linear_regression_reg import (
+    serialize_linear_regression_reg,
+    deserialize_linear_regression_reg,
+)
+
+from sklearn_migrator.regression.mlp_reg import (
+    serialize_mlp_reg,
+    deserialize_mlp_reg,
+)
+
+from sklearn_migrator.regression.random_forest_reg import (
+    serialize_random_forest_reg,
+    deserialize_random_forest_reg,
+)
+
+from sklearn_migrator.regression.ridge_reg import (
+    serialize_ridge_reg,
+    deserialize_ridge_reg,
+)
+
+from sklearn_migrator.regression.svm_reg import (
+    serialize_svr,
+    deserialize_svr,
+)
+```
+
+### 🧩 Clustering Models
+
+```python
+from sklearn_migrator.clustering.agglomerative import (
+    serialize_agglomerative,
+    deserialize_agglomerative,
+)
+
+from sklearn_migrator.clustering.k_means import (
+    serialize_k_means,
+    deserialize_k_means,
+)
+
+from sklearn_migrator.clustering.mini_batch_k_means import (
+    serialize_mini_batch_kmeans,
+    deserialize_mini_batch_kmeans,
+)
+```
+
+### 📉 Dimensionality Reduction
+
+```python
+from sklearn_migrator.dimension.pca import (
+    serialize_pca,
+    deserialize_pca,
+)
+```
+
 
 ---
 
@@ -394,7 +516,7 @@ MIT License — see [`LICENSE`](LICENSE) for details.
 ## 🔍 Author
 
 **Alberto Valdés**
-MLOps Engineer | Open Source Contributor
+ML/AI Engineer | MLOps Engineer | Open Source Contributor
 GitHub: [@anvaldes](https://github.com/anvaldes)
 
 ---
