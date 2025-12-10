@@ -20,8 +20,23 @@ def test_clu_agglomerative():
     result = serialize_agglomerative(model, version_in=version)
     new_model = deserialize_agglomerative(result, version_out=version)
 
+    #--------------------------------------------------
+
     assert isinstance(result, dict)
 
     assert "version_sklearn_in" in result
 
     assert isinstance(new_model, AgglomerativeClustering)
+
+    #--------------------------------------------------
+
+    labels_original = model.labels_.copy()
+
+    new_model.fit(X)
+    labels_migrated = new_model.labels_
+
+    # Dependiendo de tu implementación, esto puede ser exacto:
+    assert labels_original.shape == labels_migrated.shape
+    assert np.array_equal(labels_original, labels_migrated)
+
+    #--------------------------------------------------
