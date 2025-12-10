@@ -516,7 +516,9 @@ MIT License — see [`LICENSE`](LICENSE) for details.
 ## 🔍 Author
 
 **Alberto Valdés**
+
 ML/AI Engineer | MLOps Engineer | Open Source Contributor
+
 GitHub: [@anvaldes](https://github.com/anvaldes)
 
 ---
