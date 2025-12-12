@@ -10,7 +10,6 @@ all_features = [
     'max_iter',
     'fit_intercept',
     'intercept_scaling',
-    'multi_class',
     'solver',
     'verbose',
     'C',
