@@ -20,8 +20,23 @@ def test_clu_mbkmeans():
     result = serialize_mini_batch_kmeans(model, version_in=version)
     new_model = deserialize_mini_batch_kmeans(result, version_out=version)
 
+    #--------------------------------------------------
+
     assert isinstance(result, dict)
 
     assert "version_sklearn_in" in result
 
     assert isinstance(new_model, MiniBatchKMeans)
+
+    #--------------------------------------------------
+
+    labels_original = model.labels_.copy()
+    labels_migrated = new_model.labels_
+
+    labels_original = np.array(labels_original)
+    labels_migrated = np.array(labels_migrated)
+    
+    assert labels_original.shape == labels_migrated.shape
+    assert np.array_equal(labels_original, labels_migrated)
+
+    #--------------------------------------------------

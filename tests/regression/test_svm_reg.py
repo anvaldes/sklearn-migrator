@@ -14,6 +14,19 @@ def test_svm_reg():
     result = serialize_svr(model, version_in=version)
     new_model = deserialize_svr(result, version_out=version)
 
+    #--------------------------------------------------
+
     assert isinstance(result, dict)
 
     assert 'version_sklearn_in' in result
+
+    #--------------------------------------------------
+
+    y_pred = model.predict(X)
+    y_pred_new = new_model.predict(X)
+
+    threshold = 0.001
+
+    assert (abs(y_pred - y_pred_new).max() <= threshold)
+
+    #--------------------------------------------------

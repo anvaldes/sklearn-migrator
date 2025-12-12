@@ -14,8 +14,21 @@ def test_random_forest_clf():
     result = serialize_random_forest_clf(model, version_in=version)
     new_model = deserialize_random_forest_clf(result, version_out=version)
 
+    #--------------------------------------------------
+
     assert isinstance(result, dict)
 
     assert 'version_sklearn_in' in result
 
     assert isinstance(new_model, RandomForestClassifier)
+
+    #--------------------------------------------------
+
+    y_pred = model.predict_proba(X)
+    y_pred_new = new_model.predict_proba(X)
+
+    threshold = 0.001
+
+    assert (abs(y_pred - y_pred_new).max(axis = 1).max() <= threshold)
+
+    #--------------------------------------------------

@@ -31,11 +31,11 @@ def test_clu_agglomerative():
     #--------------------------------------------------
 
     labels_original = model.labels_.copy()
-
-    new_model.fit(X)
     labels_migrated = new_model.labels_
 
-    # Dependiendo de tu implementación, esto puede ser exacto:
+    labels_original = np.array(labels_original)
+    labels_migrated = np.array(labels_migrated)
+
     assert labels_original.shape == labels_migrated.shape
     assert np.array_equal(labels_original, labels_migrated)
 
