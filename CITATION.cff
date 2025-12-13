@@ -1,21 +1,36 @@
 cff-version: 1.2.0
-title: "sklearn-migrator"
+
+title: "sklearn-migrator: Cross-version migration of scikit-learn models"
+
 message: "If you use this software, please cite it as below."
+
 type: software
+
 authors:
-  - family-names: Valdés
-    given-names: Alberto
+  - family-names: Valdes Gonzalez
+    given-names: Alberto Andres
     orcid: "https://orcid.org/0009-0000-0752-8519"
+
 repository-code: "https://github.com/anvaldes/sklearn-migrator"
+
+url: "https://doi.org/10.5281/zenodo.17917931"
+
 license: MIT
-version: 0.1.0
-date-released: 2025-08-10
+
+version: 0.21.1
+
+date-released: 2025-12-12
+
+doi: 10.5281/zenodo.17917931
+
 preferred-citation:
-  type: article
-  title: "sklearn-migrator: Safely Migrating scikit-learn Models Across Versions"
+  type: software
+  title: "sklearn-migrator: Cross-version migration of scikit-learn models"
   authors:
-    - family-names: Valdés
-      given-names: Alberto
+    - family-names: Valdes Gonzalez
+      given-names: Alberto Andres
       orcid: "https://orcid.org/0009-0000-0752-8519"
+  version: 0.21.1
   year: 2025
-  journal: "Journal of Open Source Software"
+  doi: 10.5281/zenodo.17917931
+  publisher: Zenodo
