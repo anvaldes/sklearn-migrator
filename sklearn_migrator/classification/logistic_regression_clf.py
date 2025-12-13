@@ -36,7 +36,8 @@ def serialize_logistic_regression_clf(model, version_in):
 
     default_values = {
         'n_features_in_': len(model.coef_.tolist()[0]),
-        'feature_names_in_': None
+        'feature_names_in_': None,
+        'multi_class': model.get_params().get('multi_class', None)
     }
 
     kdv = list(default_values.keys())

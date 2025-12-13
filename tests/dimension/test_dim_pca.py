@@ -20,8 +20,21 @@ def test_pca():
     result = serialize_pca(model, version_in=version)
     new_model = deserialize_pca(result, version_out=version)
 
+    #--------------------------------------------------
+
     assert isinstance(result, dict)
 
     assert "version_sklearn_in" in result
 
     assert isinstance(new_model, PCA)
+
+    #--------------------------------------------------
+
+    vec = model.transform(X)
+    new_vec = new_model.transform(X)
+
+    threshold = 0.001
+
+    assert (abs(new_vec - vec).max(axis = 1).max() <= threshold)
+
+    #--------------------------------------------------
