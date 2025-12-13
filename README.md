@@ -90,6 +90,8 @@ This library has been validated across **900 version migration pairs** (from →
 |----------------------|-----------|
 | KMeans               | ✅ |
 | MiniBatchKMeans      | ✅ |
+| Agglomerative     | ✅ |
+
 
 ---
 
