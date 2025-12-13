@@ -1,10 +1,10 @@
 import sklearn
 import numpy as np
-from sklearn.cluster import MiniBatchKMeans
-from sklearn_migrator.clustering.mini_batch_k_means import serialize_mini_batch_kmeans
-from sklearn_migrator.clustering.mini_batch_k_means import deserialize_mini_batch_kmeans
+from sklearn.cluster import AgglomerativeClustering
+from sklearn_migrator.clustering.agglomerative import serialize_agglomerative
+from sklearn_migrator.clustering.agglomerative import deserialize_agglomerative
 
-def test_clu_mbkmeans():
+def test_clu_agglomerative():
 
     X = np.array([
         [1.0, 2.0, 3.0],
@@ -13,12 +13,12 @@ def test_clu_mbkmeans():
         [10.0, 11.0, 12.0]
     ])
 
-    model = MiniBatchKMeans(n_clusters=2)
+    model = AgglomerativeClustering(n_clusters=2)
     model.fit(X)
 
     version = sklearn.__version__
-    result = serialize_mini_batch_kmeans(model, version_in=version)
-    new_model = deserialize_mini_batch_kmeans(result, version_out=version)
+    result = serialize_agglomerative(model, version_in=version)
+    new_model = deserialize_agglomerative(result, version_out=version)
 
     #--------------------------------------------------
 
@@ -26,7 +26,7 @@ def test_clu_mbkmeans():
 
     assert "version_sklearn_in" in result
 
-    assert isinstance(new_model, MiniBatchKMeans)
+    assert isinstance(new_model, AgglomerativeClustering)
 
     #--------------------------------------------------
 
@@ -35,7 +35,7 @@ def test_clu_mbkmeans():
 
     labels_original = np.array(labels_original)
     labels_migrated = np.array(labels_migrated)
-    
+
     assert labels_original.shape == labels_migrated.shape
     assert np.array_equal(labels_original, labels_migrated)
 

@@ -14,8 +14,21 @@ def test_random_forest_reg():
     result = serialize_random_forest_reg(model, version_in=version)
     new_model = deserialize_random_forest_reg(result, version_out=version)
 
+    #--------------------------------------------------
+
     assert isinstance(result, dict)
 
     assert 'version_sklearn_in' in result
 
     assert isinstance(new_model, RandomForestRegressor)
+
+    #--------------------------------------------------
+
+    y_pred = model.predict(X)
+    y_pred_new = new_model.predict(X)
+
+    threshold = 0.001
+
+    assert (abs(y_pred - y_pred_new).max() <= threshold)
+
+    #--------------------------------------------------
