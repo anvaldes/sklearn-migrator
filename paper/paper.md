@@ -50,7 +50,32 @@ Given scikit-learn’s broad adoption in research and industry, there is strong 
 
 The library targets practitioners and MLOps teams who must migrate or reproduce models across heterogeneous environments. It supports forward and backward migration and has been exercised across 32 scikit-learn releases (`0.21.3 → 1.7.2`), covering **1,024** version pairs with unit tests and environment-isolated validation. This foundation reduces upgrade risk today while remaining extensible to additional estimators and components in future releases.
 
+# Research Impact Statement
+
+This software addresses a critical reproducibility challenge in applied machine learning: the inherent fragility of serialized `scikit-learn` models across library versions. Standard persistence mechanisms (e.g., `pickle`) tie model artifacts to specific environments, creating a "dependency lock-in" that hinders long-term research reproducibility and complicates production MLOps workflows.
+
+By enabling deterministic, cross-version migration, `sklearn-migrator` mitigates the operational risk and technical debt associated with mandatory security patching and dependency upgrades. The library is particularly impactful for high-stakes domains—such as finance, healthcare, and risk modeling—where models must remain verifiable and functional over long lifecycles, and where retraining may be computationally expensive or ethically restricted.
+
+More broadly, this work promotes the transition toward **transparent and inspectable model artifacts**. By moving away from opaque binary formats and focusing on estimator-level compatibility, the tool fills a significant gap in the machine learning ecosystem. It provides a native, Python-centric path to model portability that complements existing interoperability standards while maintaining the full flexibility of the `scikit-learn` API.
+
+# AI Usage Disclosure
+
+Large language models were used to assist with minor grammar checking and phrasing
+improvements during manuscript preparation. All software design decisions,
+implementation, experiments, validation, and technical content were authored and
+verified by the submitting author.
+
 # Design and validation
+
+## Software Design
+
+The design of `sklearn-migrator` follows a modular, estimator-centric architecture that separates model inspection, version-aware serialization, and controlled reconstruction in the target environment. Each supported `scikit-learn` estimator family is implemented as an **isolated migration unit**, allowing fine-grained handling of structural changes across versions without affecting unrelated models.
+
+At a high level, the migration pipeline consists of three functional components:
+
+1. **Introspection Layer**: A lightweight layer that extracts constructor parameters and prediction-critical attributes from a fitted estimator in the source environment. This layer identifies the minimal state required to satisfy the "Stage 1 (parity)" objective.
+2. **Version-aware Serialization Layer**: This component encodes attributes into a portable, JSON-compatible Python dictionary. It explicitly records default values for attributes that may not exist in all versions, ensuring the payload remains self-describing and robust to "Stage 2 (compatibility)" challenges.
+3. **Deserialization Layer**: Reconstructs an equivalent estimator in the target environment, assigning only attributes that are valid for the destination version and safely skipping or mapping incompatible or deprecated fields.
 
 ## Serialization format
 
