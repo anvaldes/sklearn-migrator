@@ -43,9 +43,11 @@ class Migrated_SVR:
             degree = self.dict['params']['degree']
         )
 
-        alpha = np.ravel(self.dict['dual_coef_'])   # (n_SV,)
-        b = float(np.ravel(self.dict['_intercept_'][0]))
-    
+        alpha = np.asarray(self.dict["dual_coef_"], dtype=float).ravel()
+
+        b_arr = np.asarray(self.dict["_intercept_"], dtype=float).ravel()
+        b = float(b_arr[0])
+
         return K @ alpha + b
 
 def serialize_svr(model, version_in):
