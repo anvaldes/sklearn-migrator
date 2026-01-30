@@ -50,6 +50,14 @@ Given scikit-learn’s broad adoption in research and industry, there is strong 
 
 The library targets practitioners and MLOps teams who must migrate or reproduce models across heterogeneous environments. It supports forward and backward migration and has been exercised across 32 scikit-learn releases (`0.21.3 → 1.7.2`), covering **1,024** version pairs with unit tests and environment-isolated validation. This foundation reduces upgrade risk today while remaining extensible to additional estimators and components in future releases.
 
+# State of the field
+
+Model persistence and portability are longstanding challenges in applied machine learning. In the scikit-learn ecosystem, the officially recommended mechanisms for saving trained estimators—`pickle` and `joblib`—are explicitly documented as *not* guaranteeing forward or backward compatibility across library versions [@sklearn_persistence]. As a result, serialized models are tightly coupled to the exact scikit-learn release and Python environment in which they were created.
+
+Several alternative approaches partially address related concerns. Interoperability frameworks such as ONNX and PMML enable model exchange across runtimes and languages, but they support only a subset of scikit-learn estimators and often sacrifice access to native APIs, custom preprocessing logic, or exact numerical parity [@parida2025exportformats]. Re-training models after upgrades is a common operational workaround, but it may be infeasible due to missing data, regulatory constraints, or computational cost—particularly in long-lived production systems.
+
+Despite the prevalence of scikit-learn in both research and industry, there is currently no native, Python-centric solution that enables **deterministic migration of fitted scikit-learn estimators across versions while preserving inference behavior**. Existing tools focus either on environment pinning or on cross-framework export, leaving a gap for version-aware, estimator-level portability within the scikit-learn ecosystem itself. `sklearn-migrator` fills this gap by providing a lightweight, inspectable, and version-resilient mechanism for migrating models across scikit-learn releases without retraining.
+
 # Research Impact Statement
 
 This software addresses a critical reproducibility challenge in applied machine learning: the inherent fragility of serialized `scikit-learn` models across library versions. Standard persistence mechanisms (e.g., `pickle`) tie model artifacts to specific environments, creating a "dependency lock-in" that hinders long-term research reproducibility and complicates production MLOps workflows.
@@ -60,10 +68,7 @@ More broadly, this work promotes the transition toward **transparent and inspect
 
 # AI Usage Disclosure
 
-Large language models were used to assist with minor grammar checking and phrasing
-improvements during manuscript preparation. All software design decisions,
-implementation, experiments, validation, and technical content were authored and
-verified by the submitting author.
+Large language models were used to assist with minor grammar checking and phrasing improvements during manuscript preparation. All software design decisions, implementation, experiments, validation, and technical content were authored and verified by the submitting author.
 
 # Design and validation
 
