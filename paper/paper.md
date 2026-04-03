@@ -155,3 +155,5 @@ Analogous functions exist for all covered estimators (classification, regression
 # Acknowledgements
 
 We thank the scikit-learn core developers and contributors for their open-source work and documentation, as well as the broader NumPy/SciPy/joblib ecosystems on which this project depends. We are grateful to colleagues and early adopters for testing and feedback that shaped the design, and to the JOSS editors and reviewers for guidance during the review process.
+
+# References
