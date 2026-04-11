@@ -2,7 +2,7 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-COPY requirements_input.txt .
+COPY integration/environments/input/1.5.1/requirements_input.txt .
 COPY integration/input_scripts/ .
         
 RUN mkdir -p /data /input
