@@ -1,0 +1,19 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements_output.txt .
+COPY output_scripts/ .
+
+RUN mkdir -p /data /output
+
+COPY dataset_reg/ /data/
+COPY dataset_clf/ /data/
+COPY dataset_dim/ /data/
+COPY dataset_clu/ /data/
+
+COPY sklearn_migrator/ ./sklearn_migrator/
+
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements_output.txt
+
+ENTRYPOINT ["python"]
