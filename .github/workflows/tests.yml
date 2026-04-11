@@ -59,10 +59,13 @@ jobs:
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build and push input image
+      - name: Build input image
         run: |
           docker build \
             -f integration/environments/input/${{ matrix.version }}/Dockerfile_input \
             -t ghcr.io/${{ github.repository }}/sklearn-migrator-input-${{ matrix.version }}:latest \
             .
+
+      - name: Push input image
+        run: |
           docker push ghcr.io/${{ github.repository }}/sklearn-migrator-input-${{ matrix.version }}:latest
