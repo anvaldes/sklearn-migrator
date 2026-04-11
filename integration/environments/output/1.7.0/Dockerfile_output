@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY integration/environments/output/1.7.2/requirements_output.txt .
+COPY integration/environments/output/1.7.0/requirements_output.txt .
 COPY integration/output_scripts/ .
 
 RUN mkdir -p /data /output
