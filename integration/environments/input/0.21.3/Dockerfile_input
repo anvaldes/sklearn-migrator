@@ -17,13 +17,13 @@ RUN pip install --upgrade pip && \
 
 COPY sklearn_migrator/ ./sklearn_migrator/
 
-COPY input_scripts/ .
+COPY integration/input_scripts/ .
         
 RUN mkdir -p /data /input
         
-COPY dataset_reg/ /data/
-COPY dataset_clf/ /data/
-COPY dataset_dim/ /data/
-COPY dataset_clu/ /data/
+COPY integration/dataset_reg/ /data/
+COPY integration/dataset_clf/ /data/
+COPY integration/dataset_dim/ /data/
+COPY integration/dataset_clu/ /data/
     
 ENTRYPOINT ["python"]
