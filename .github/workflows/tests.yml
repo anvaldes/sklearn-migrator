@@ -238,10 +238,3 @@ jobs:
           name: performance-${{ matrix.name_model }}
           path: performance/performance_${{ matrix.name_model }}.csv
           if-no-files-found: ignore
-      
-      - name: Commit performance CSV
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add performance/
-          git diff --staged --quiet && echo "No changes to commit" || git commit -m "perf: add performance results for ${{ matrix.name_model }}" && git push
