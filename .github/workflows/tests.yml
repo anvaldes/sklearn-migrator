@@ -168,7 +168,6 @@ jobs:
   integration-tests:
     if: true
     runs-on: ubuntu-latest
-    needs: [build-input-images, build-output-images]
     strategy:
       fail-fast: false
       matrix:
