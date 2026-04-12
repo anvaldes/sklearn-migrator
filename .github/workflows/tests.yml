@@ -243,5 +243,4 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add performance/
-          git commit -m "perf: add performance results for ${{ matrix.name_model }}"
-          git push
+          git diff --staged --quiet && echo "No changes to commit" || git commit -m "perf: add performance results for ${{ matrix.name_model }}" && git push
