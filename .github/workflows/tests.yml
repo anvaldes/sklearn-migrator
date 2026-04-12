@@ -204,6 +204,24 @@ jobs:
       - name: Run integration test
         run: python integration/scripts/run_${{ matrix.name_model }}.py
 
+      - name: Validate performance
+        run: |
+          python - <<'EOF'
+          import pandas as pd
+
+          THRESHOLD = 10e-2
+          name_model = "${{ matrix.name_model }}"
+
+          df = pd.read_csv(f"performance/performance_{name_model}.csv", index_col=0)
+          print(df)
+
+          max_error = df.max(axis=1).max()
+          print(f"\nMax error: {max_error}")
+
+          assert max_error <= THRESHOLD, f"Max error {max_error} exceeds threshold {THRESHOLD} ❌"
+          print("Integration test passed ✅")
+          EOF
+
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
