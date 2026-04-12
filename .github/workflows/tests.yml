@@ -171,7 +171,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        name_model: ["svm_reg"]
+        name_model: ["decision_tree_reg", "svm_reg"]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
