@@ -1,0 +1,19 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY integration/environments/output/1.2.1/requirements_output.txt .
+COPY integration/output_scripts/ .
+
+RUN mkdir -p /data /output
+
+COPY integration/dataset_reg/ /data/
+COPY integration/dataset_clf/ /data/
+COPY integration/dataset_dim/ /data/
+COPY integration/dataset_clu/ /data/
+
+COPY sklearn_migrator/ ./sklearn_migrator/
+
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements_output.txt
+
+ENTRYPOINT ["python"]

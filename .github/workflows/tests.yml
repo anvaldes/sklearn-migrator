@@ -1,5 +1,4 @@
 name: tests
-
 on:
   push:
     branches: ["**"]
@@ -8,12 +7,12 @@ on:
 
 jobs:
   test:
+    if: true
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,43 +46,201 @@ jobs:
             coverage.xml
           if-no-files-found: ignore
 
-  integration-tests:
+  build-input-images:
+    if: true
     runs-on: ubuntu-latest
     needs: [test]
-
+    strategy:
+      fail-fast: false
+      matrix:
+        version: [
+          "0.21.3",
+          "0.22.0",
+          "0.22.1",
+          "0.23.0",
+          "0.23.1",
+          "0.23.2",
+          "0.24.0",
+          "0.24.1",
+          "0.24.2",
+          "1.0.0",
+          "1.0.1",
+          "1.0.2",
+          "1.1.0",
+          "1.1.1",
+          "1.1.2",
+          "1.1.3",
+          "1.2.0",
+          "1.2.1",
+          "1.2.2",
+          "1.3.0",
+          "1.3.1",
+          "1.3.2",
+          "1.4.0",
+          "1.4.2",
+          "1.5.0",
+          "1.5.1",
+          "1.5.2",
+          "1.6.0",
+          "1.6.1",
+          "1.7.0",
+          "1.7.1",
+          "1.7.2"
+        ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Set up Python (host for compare_preds.py)
+      - name: Build input image
+        run: |
+          docker build \
+            -f integration/environments/input/${{ matrix.version }}/Dockerfile_input \
+            -t ghcr.io/${{ github.repository }}/sklearn-migrator-input-${{ matrix.version }}:latest \
+            .
+
+      - name: Push input image
+        run: |
+          docker push ghcr.io/${{ github.repository }}/sklearn-migrator-input-${{ matrix.version }}:latest
+  
+  build-output-images:
+    if: true
+    runs-on: ubuntu-latest
+    needs: [build-input-images]
+    strategy:
+      fail-fast: false
+      matrix:
+        version: [
+          "0.21.3",
+          "0.22.0",
+          "0.22.1",
+          "0.23.0",
+          "0.23.1",
+          "0.23.2",
+          "0.24.0",
+          "0.24.1",
+          "0.24.2",
+          "1.0.0",
+          "1.0.1",
+          "1.0.2",
+          "1.1.0",
+          "1.1.1",
+          "1.1.2",
+          "1.1.3",
+          "1.2.0",
+          "1.2.1",
+          "1.2.2",
+          "1.3.0",
+          "1.3.1",
+          "1.3.2",
+          "1.4.0",
+          "1.4.2",
+          "1.5.0",
+          "1.5.1",
+          "1.5.2",
+          "1.6.0",
+          "1.6.1",
+          "1.7.0",
+          "1.7.1",
+          "1.7.2"
+        ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build output image
+        run: |
+          docker build \
+            --build-arg VERSION=${{ matrix.version }} \
+            -f integration/environments/output/${{ matrix.version }}/Dockerfile_output \
+            -t ghcr.io/${{ github.repository }}/sklearn-migrator-output-${{ matrix.version }}:latest \
+            .
+
+      - name: Push output image
+        run: |
+          docker push ghcr.io/${{ github.repository }}/sklearn-migrator-output-${{ matrix.version }}:latest
+  
+  integration-tests:
+    if: true
+    runs-on: ubuntu-latest
+    needs: [build-output-images]
+    strategy:
+      fail-fast: false
+      matrix:
+        name_model: ["decision_tree_reg", "svm_reg"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Install minimal deps (host)
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install numpy
+          pip install pandas
 
-      - name: Build integration images
+      - name: Pull all input images
         run: |
-          docker build -t sklearn-migrator-env-in  -f integration/env_in/Dockerfile .
-          docker build -t sklearn-migrator-env-out -f integration/env_out/Dockerfile .
+          for version in 0.21.3 0.22.0 0.22.1 0.23.0 0.23.1 0.23.2 0.24.0 0.24.1 0.24.2 \
+                         1.0.0 1.0.1 1.0.2 1.1.0 1.1.1 1.1.2 1.1.3 1.2.0 1.2.1 1.2.2 \
+                         1.3.0 1.3.1 1.3.2 1.4.0 1.4.2 1.5.0 1.5.1 1.5.2 1.6.0 1.6.1 \
+                         1.7.0 1.7.1 1.7.2; do
+            docker pull ghcr.io/${{ github.repository }}/sklearn-migrator-input-${version}:latest
+          done
 
-      - name: Run integration script
+      - name: Pull all output images
         run: |
-          set -euo pipefail
-          chmod +x integration/run.sh
-          ./integration/run.sh
+          for version in 0.21.3 0.22.0 0.22.1 0.23.0 0.23.1 0.23.2 0.24.0 0.24.1 0.24.2 \
+                         1.0.0 1.0.1 1.0.2 1.1.0 1.1.1 1.1.2 1.1.3 1.2.0 1.2.1 1.2.2 \
+                         1.3.0 1.3.1 1.3.2 1.4.0 1.4.2 1.5.0 1.5.1 1.5.2 1.6.0 1.6.1 \
+                         1.7.0 1.7.1 1.7.2; do
+            docker pull ghcr.io/${{ github.repository }}/sklearn-migrator-output-${version}:latest
+          done
 
-      - name: Upload integration artifacts
+      - name: Run integration test
+        run: python integration/scripts/run_${{ matrix.name_model }}.py
+
+      - name: Validate performance
+        run: |
+          python - <<'EOF'
+          import pandas as pd
+
+          THRESHOLD = 10e-2
+          name_model = "${{ matrix.name_model }}"
+
+          df = pd.read_csv(f"performance/performance_{name_model}.csv", index_col=0)
+          print(df)
+
+          max_error = df.max(axis=1).max()
+          print(f"\nMax error: {max_error}")
+
+          assert max_error <= THRESHOLD, f"Max error {max_error} exceeds threshold {THRESHOLD} ❌"
+          print("Integration test passed ✅")
+          EOF
+
+      - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: integration-artifacts
-          path: integration/_artifacts
+          name: logs-${{ matrix.name_model }}
+          path: logs/
           if-no-files-found: ignore
 
+      - name: Upload performance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-${{ matrix.name_model }}
+          path: performance/performance_${{ matrix.name_model }}.csv
+          if-no-files-found: ignore
