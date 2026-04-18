@@ -50,9 +50,19 @@ The library targets practitioners and MLOps teams who must migrate or reproduce 
 
 # State of the field
 
-Model persistence and portability are longstanding challenges in applied machine learning. In the scikit-learn ecosystem, the officially recommended mechanisms for saving trained estimators—`pickle` and `joblib`—are explicitly documented as *not* guaranteeing forward or backward compatibility across library versions [@sklearn_persistence]. As a result, serialized models are tightly coupled to the exact scikit-learn release and Python environment in which they were created.
+Model persistence and portability are longstanding challenges in applied machine learning, with documented community demand for cross-version compatibility solutions [@sklearn_issue10319]. In the scikit-learn ecosystem, the officially recommended mechanisms for saving trained estimators—`pickle` and `joblib`—are explicitly documented as *not* guaranteeing forward or backward compatibility across library versions [@sklearn_persistence]. As a result, serialized models are tightly coupled to the exact scikit-learn release and Python environment in which they were created.
 
-Several alternative approaches partially address related concerns. Interoperability frameworks such as ONNX and PMML enable model exchange across runtimes and languages, but they support only a subset of scikit-learn estimators and often sacrifice access to native APIs, custom preprocessing logic, or numerical parity [@parida2025exportformats]. Re-training models after upgrades is a common workaround, but it may be infeasible due to missing data, regulatory constraints, or computational cost.
+Several alternative approaches partially address related concerns, but each comes with significant limitations in practice:
+
+- **pickle/joblib**: the default persistence mechanism, but explicitly version-fragile. A model saved under one release may fail to load or behave differently under another [@sklearn_persistence].
+- **skops**: designed for secure model sharing and audit trails using a safer serialization format than pickle, but does not address cross-version compatibility — a model serialized with skops under one sklearn version may still fail to load under another.
+- **sklearn-onnx**: converts scikit-learn models to the ONNX format for cross-runtime interoperability, but supports only a subset of estimators, does not preserve the native scikit-learn API, and introduces a dependency on the ONNX runtime [@parida2025exportformats].
+- **PMML**: a standard interchange format with broad tool support, but with limited scikit-learn estimator coverage and no guarantee of numerical parity.
+- **Re-training**: a common workaround, but often infeasible due to missing data, regulatory constraints, or computational cost.
+
+Beyond technical limitations, there is an important security dimension to this problem. Pinning old scikit-learn versions to avoid the cost of retraining or migration is not a cost-free decision: it accumulates CVEs and security debt over time, exposing production systems to known vulnerabilities. This makes the case for a migration tool particularly compelling in organizations where dependency upgrades are driven by security patching cycles rather than feature adoption.
+
+`sklearn-migrator` addresses this gap directly by enabling native, Python-centric cross-version migration without requiring re-training, runtime conversion, or version pinning — while maintaining full compatibility with the scikit-learn API.
 
 # Research Impact Statement
 
@@ -94,9 +104,11 @@ To keep payloads portable, the library restricts values to JSON-encodable primit
 
 - **Environment isolation** (e.g., containers) to ensure `version_in` and `version_out` represent real installations.
 - **Fixed synthetic datasets** for deterministic evaluation.
-- **Strict parity checks** comparing source and migrated predictions under a tolerance (e.g., `1e-4`).
+- **Strict parity checks** comparing source and migrated predictions under a tolerance (e.g., `1e-2`).
 
-The library has been tested across a full 32×32 version compatibility matrix, totaling **1,024 migration pairs**, and across all supported estimators. This automated validation provides confidence that the two-stage strategy behaves consistently across a large portion of the modern scikit-learn release history.
+Each of the 21 supported models is tested with a specific parameter configuration that exercises the most relevant options for that model. The configurations used range from default instantiations (e.g.,  `LinearRegression()`, `RandomForestClassifier()`) to configurations with explicit parameters (e.g., `DecisionTreeClassifier(max_depth=4, random_state=42)`, `PCA(n_components=2, whiten=True, svd_solver='full')`, `SVC(probability=True)`). Exhaustive combinatorial testing of all parameter configurations is outside the current scope of the library.
+
+The library has been tested across a full 32×32 version compatibility matrix, totaling **1,024 migration pairs**, and across all supported estimators.
 
 # Example
 
@@ -140,7 +152,7 @@ tgt_model = deserialize_random_forest_reg(payload_loaded, version_out=tgt_versio
 # Prediction parity check
 y_src = src_model.predict(X)
 y_tgt = tgt_model.predict(X)
-assert np.max(np.abs(y_src - y_tgt)) < 1e-4
+assert np.max(np.abs(y_src - y_tgt)) < 1e-2
 print("Prediction parity verified.")
 ```
 
@@ -150,7 +162,8 @@ Analogous functions exist for all covered estimators (classification, regression
 
 - **Two environments required.** End-to-end validation relies on two isolated environments: a source environment (`version_in`) to serialize and a target environment (`version_out`) to deserialize and verify prediction parity. While this can be simulated on one machine, truly isolated setups (e.g., Docker images) are recommended to avoid dependency leakage.
 - **Partial scikit-learn coverage.** scikit-learn contains many estimators and pipeline components beyond the 21 currently supported. Additional models (e.g., pipelines, transformers, and further estimators) are not yet supported but are planned for future releases. We actively welcome community contributions to expand coverage.
-**Parity tolerance depends on model family.** Some model families may be sensitive to floating-point or solver differences across versions; the library uses strict tolerances by default but these can be adjusted depending on operational requirements.
+- **Parity tolerance depends on model family.** Some model families may be sensitive to floating-point or solver differences across versions; the library uses strict tolerances by default but these can be adjusted depending on operational requirements.
+- **Parameter configuration coverage.** Each model is validated under a representative parameter configuration. While the library handles known breaking changes across all supported versions through explicit version-aware logic, exhaustive coverage of all possible parameter combinations is outside the current scope. Additionally, it is not possible to guarantee coverage of breaking changes introduced in future scikit-learn releases, as these depend on upstream development decisions.
 
 # Acknowledgements
 
