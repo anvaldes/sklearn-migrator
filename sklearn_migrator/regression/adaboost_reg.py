@@ -16,7 +16,20 @@ all_features = [
 ]
 
 
-def version_tuple(version):
+def version_tuple(version: str) -> tuple:
+    """
+    Convert a version string into a comparable tuple of integers.
+
+    Parameters
+    ----------
+    version : str
+        Version string (e.g. '1.2.0').
+
+    Returns
+    -------
+    tuple
+        Tuple of integers (major, minor, patch).
+    """
 
     version_split = version.split('.')
 
@@ -32,7 +45,22 @@ def version_tuple(version):
     return new_version
 
 
-def serialize_adaboost_reg(model, version_in):
+def serialize_adaboost_reg(model: AdaBoostRegressor, version_in: str) -> dict:
+    """
+    Serialize a fitted AdaBoostRegressor into a JSON-compatible dictionary.
+
+    Parameters
+    ----------
+    model : AdaBoostRegressor
+        A fitted scikit-learn AdaBoostRegressor instance.
+    version_in : str
+        The sklearn version used to train the model (e.g. '1.2.0').
+
+    Returns
+    -------
+    dict
+        A dictionary containing all necessary data to reconstruct the model.
+    """
 
     metadata = {}
 
@@ -79,7 +107,22 @@ def serialize_adaboost_reg(model, version_in):
     return metadata
 
 
-def deserialize_adaboost_reg(data, version_out):
+def deserialize_adaboost_reg(data: dict, version_out: str) -> AdaBoostRegressor:
+    """
+    Reconstruct an AdaBoostRegressor from a serialized dictionary.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary produced by serialize_adaboost_reg.
+    version_out : str
+        The sklearn version of the target environment (e.g. '1.7.0').
+
+    Returns
+    -------
+    AdaBoostRegressor
+        A reconstructed scikit-learn AdaBoostRegressor instance.
+    """
 
     pre_model = AdaBoostRegressor()
     pre_get_params = list(pre_model.get_params().keys())

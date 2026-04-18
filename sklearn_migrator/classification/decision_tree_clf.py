@@ -26,29 +26,76 @@ all_features = [
 ]
 
 
-def version_tuple(version):
+def version_tuple(version: str) -> tuple:
 
-  version_split = version.split('.')
+    """
+    Convert a version string into a comparable tuple of integers.
 
-  if len(version_split) == 1:
-    new_version = (int(version_split[0]), 0, 0)
-  elif len(version_split) == 2:
-    new_version = (int(version_split[0]), int(version_split[1]), 0)
-  elif len(version_split) == 3:
-    new_version = (int(version_split[0]), int(version_split[1]), int(version_split[2]))
-  else:
-    new_version = 'Formato no valido'
+    Parameters
+    ----------
+    version : str
+        Version string (e.g. '1.2.0').
 
-  return new_version
+    Returns
+    -------
+    tuple
+        Tuple of integers (major, minor, patch).
+    """
+
+    version_split = version.split('.')
+
+    if len(version_split) == 1:
+        new_version = (int(version_split[0]), 0, 0)
+    elif len(version_split) == 2:
+        new_version = (int(version_split[0]), int(version_split[1]), 0)
+    elif len(version_split) == 3:
+        new_version = (int(version_split[0]), int(version_split[1]), int(version_split[2]))
+    else:
+        new_version = 'Formato no valido'
+
+    return new_version
 
 
-def _get_extended_nodes(nodes, version_in):
+def _get_extended_nodes(nodes: list, version_in: str) -> list:
+    """
+    Extend node tuples with a placeholder field for sklearn versions < 1.3.
+
+    Parameters
+    ----------
+    nodes : list
+        List of node tuples from the tree state.
+    version_in : str
+        The sklearn version used to train the model.
+
+    Returns
+    -------
+    list
+        List of node tuples, extended if necessary.
+    """
+
     if (version_tuple('0.21.3') <= version_tuple(version_in)) and (version_tuple(version_in) < version_tuple('1.3')):
         return [node + (0,) for node in nodes]
     return nodes
 
 
-def _build_dtype_dict(dtypes, version_in):
+def _build_dtype_dict(dtypes: np.dtype, version_in: str) -> dict:
+    """
+    Build a dictionary describing the node dtype structure of the tree.
+
+    Parameters
+    ----------
+    dtypes : np.dtype
+        The dtype of the nodes array from the tree state.
+    version_in : str
+        The sklearn version used to train the model.
+
+    Returns
+    -------
+    dict
+        Dictionary with field names, formats, offsets and itemsize.
+    """
+
+
     field_names = dtypes.names
     formats = [dtypes.fields[name][0] for name in field_names]
     offsets = [dtypes.fields[name][1] for name in field_names]
@@ -70,7 +117,22 @@ def _build_dtype_dict(dtypes, version_in):
     }
 
 
-def _get_metadata(model, version_in):
+def _get_metadata(model: DecisionTreeClassifier, version_in: str) -> dict:
+    """
+    Extract feature metadata from a fitted DecisionTreeClassifier.
+
+    Parameters
+    ----------
+    model : DecisionTreeClassifier
+        A fitted scikit-learn DecisionTreeClassifier instance.
+    version_in : str
+        The sklearn version used to train the model.
+
+    Returns
+    -------
+    dict
+        Dictionary with n_features_in, n_features, n_classes and n_outputs.
+    """
 
     dict_metadata = {}
 
@@ -90,7 +152,23 @@ def _get_metadata(model, version_in):
     return dict_metadata
 
 
-def serialize_decision_tree_clf(model, version_in):
+def serialize_decision_tree_clf(model: DecisionTreeClassifier, version_in: str) -> dict:
+    """
+    Serialize a fitted DecisionTreeClassifier into a JSON-compatible dictionary.
+
+    Parameters
+    ----------
+    model : DecisionTreeClassifier
+        A fitted scikit-learn DecisionTreeClassifier instance.
+    version_in : str
+        The sklearn version used to train the model (e.g. '1.2.0').
+
+    Returns
+    -------
+    dict
+        A dictionary containing all necessary data to reconstruct the model.
+    """
+
     tree = model.tree_
     state = tree.__getstate__()
 
@@ -131,8 +209,23 @@ def serialize_decision_tree_clf(model, version_in):
 
     return metadata
 
+def _build_tree_dtype(dtypes_dict: dict, version_out: str) -> tuple:
+    """
+    Reconstruct the numpy dtype for the nodes array of the target sklearn version.
 
-def _build_tree_dtype(dtypes_dict, version_out):
+    Parameters
+    ----------
+    dtypes_dict : dict
+        Dictionary produced by _build_dtype_dict.
+    version_out : str
+        The sklearn version of the target environment.
+
+    Returns
+    -------
+    tuple
+        A tuple of (np.dtype, int) with the dtype and number of elements to use.
+    """
+
     version_lt_1_3 = version_tuple(version_out) < version_tuple('1.3')
     num_elements = 7 if version_lt_1_3 else 8
 
@@ -149,7 +242,23 @@ def _build_tree_dtype(dtypes_dict, version_out):
     }), num_elements
 
 
-def deserialize_decision_tree_clf(data, version_out):
+def deserialize_decision_tree_clf(data: dict, version_out: str) -> DecisionTreeClassifier:
+    """
+    Reconstruct a DecisionTreeClassifier from a serialized dictionary.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary produced by serialize_decision_tree_clf.
+    version_out : str
+        The sklearn version of the target environment (e.g. '1.7.0').
+
+    Returns
+    -------
+    DecisionTreeClassifier
+        A reconstructed scikit-learn DecisionTreeClassifier instance.
+    """
+
     version_in = data['version_sklearn_in']
     serialized = data['serialized_tree']
     dtype_dict = serialized['dtypes']

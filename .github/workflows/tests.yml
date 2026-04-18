@@ -238,7 +238,7 @@ jobs:
           python - <<'EOF'
           import pandas as pd
 
-          THRESHOLD = 10e-2
+          THRESHOLD = 1e-2
           name_model = "${{ matrix.name_model }}"
 
           df = pd.read_csv(f"performance/performance_{name_model}.csv", index_col=0)

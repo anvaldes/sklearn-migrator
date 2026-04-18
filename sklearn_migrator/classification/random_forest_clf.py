@@ -30,7 +30,22 @@ all_features = [
     'monotonic_cst',
 ]
 
-def serialize_random_forest_clf(model, version_in):
+def serialize_random_forest_clf(model: RandomForestClassifier, version_in: str) -> dict:
+    """
+    Serialize a fitted RandomForestClassifier into a JSON-compatible dictionary.
+
+    Parameters
+    ----------
+    model : RandomForestClassifier
+        A fitted scikit-learn RandomForestClassifier instance.
+    version_in : str
+        The sklearn version used to train the model (e.g. '1.2.0').
+
+    Returns
+    -------
+    dict
+        A dictionary containing all necessary data to reconstruct the model.
+    """
 
     estimators = model.estimators_
     estimators_ser = [serialize_decision_tree_clf(e, version_in) for e in estimators]
@@ -79,7 +94,22 @@ def serialize_random_forest_clf(model, version_in):
     return metadata
 
 
-def deserialize_random_forest_clf(data, version_out):
+def deserialize_random_forest_clf(data: dict, version_out: str) -> RandomForestClassifier:
+    """
+    Reconstruct a RandomForestClassifier from a serialized dictionary.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary produced by serialize_random_forest_clf.
+    version_out : str
+        The sklearn version of the target environment (e.g. '1.7.0').
+
+    Returns
+    -------
+    RandomForestClassifier
+        A reconstructed scikit-learn RandomForestClassifier instance.
+    """
 
     pre_model = RandomForestClassifier()
     pre_get_params = list(pre_model.get_params().keys())

@@ -40,27 +40,54 @@ all_features = [
 ]
 
 
-def version_tuple(version):
+def version_tuple(version: str) -> tuple:
+    """
+    Convert a version string into a comparable tuple of integers.
 
-  version_split = version.split('.')
+    Parameters
+    ----------
+    version : str
+        Version string (e.g. '1.2.0').
 
-  if len(version_split) == 1:
-    new_version = (int(version_split[0]), 0, 0)
-  elif len(version_split) == 2:
-    new_version = (int(version_split[0]), int(version_split[1]), 0)
-  elif len(version_split) == 3:
-    new_version = (int(version_split[0]), int(version_split[1]), int(version_split[2]))
-  else:
-    new_version = 'Formato no valido'
+    Returns
+    -------
+    tuple
+        Tuple of integers (major, minor, patch).
+    """
 
-  return new_version
+    version_split = version.split('.')
+
+    if len(version_split) == 1:
+        new_version = (int(version_split[0]), 0, 0)
+    elif len(version_split) == 2:
+        new_version = (int(version_split[0]), int(version_split[1]), 0)
+    elif len(version_split) == 3:
+        new_version = (int(version_split[0]), int(version_split[1]), int(version_split[2]))
+    else:
+        new_version = 'Formato no valido'
+
+    return new_version
 
 
 if version_tuple(sklearn.__version__) < version_tuple('1.4.0'):
 
     from sklearn.ensemble import _gb_losses
 
-    def get_loss_object(loss_str):
+    def get_loss_object(loss_str: str) -> type:
+        """
+        Return the appropriate loss class for the given loss string.
+
+        Parameters
+        ----------
+        loss_str : str
+            Loss function name (e.g. 'squared_error', 'huber', 'quantile').
+
+        Returns
+        -------
+        type
+            The corresponding loss class for the current sklearn version.
+        """
+
         mapping = {
             'ls': lambda: _gb_losses.LeastSquaresError,
             'squared_error': lambda: _gb_losses.LeastSquaresError,
@@ -73,7 +100,21 @@ else:
 
     from sklearn._loss.loss import HalfSquaredError, AbsoluteError, HuberLoss, PinballLoss
 
-    def get_loss_object(loss_str):
+    def get_loss_object(loss_str: str) -> type:
+        """
+        Return the appropriate loss class for the given loss string.
+
+        Parameters
+        ----------
+        loss_str : str
+            Loss function name (e.g. 'squared_error', 'huber', 'quantile').
+
+        Returns
+        -------
+        type
+            The corresponding loss class for the current sklearn version.
+        """
+
         mapping = {
             'ls': lambda: HalfSquaredError,
             'squared_error': lambda : HalfSquaredError,
@@ -84,7 +125,22 @@ else:
         return mapping[loss_str]()
 
 
-def serialize_gradient_boosting_reg(model, version_in):
+def serialize_gradient_boosting_reg(model: GradientBoostingRegressor, version_in: str) -> dict:
+    """
+    Serialize a fitted GradientBoostingRegressor into a JSON-compatible dictionary.
+
+    Parameters
+    ----------
+    model : GradientBoostingRegressor
+        A fitted scikit-learn GradientBoostingRegressor instance.
+    version_in : str
+        The sklearn version used to train the model (e.g. '1.2.0').
+
+    Returns
+    -------
+    dict
+        A dictionary containing all necessary data to reconstruct the model.
+    """
 
     metadata = {}
 
@@ -147,7 +203,22 @@ def serialize_gradient_boosting_reg(model, version_in):
     return metadata
 
 
-def deserialize_gradient_boosting_reg(data, version_out):
+def deserialize_gradient_boosting_reg(data: dict, version_out: str) -> GradientBoostingRegressor:
+    """
+    Reconstruct a GradientBoostingRegressor from a serialized dictionary.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary produced by serialize_gradient_boosting_reg.
+    version_out : str
+        The sklearn version of the target environment (e.g. '1.7.0').
+
+    Returns
+    -------
+    GradientBoostingRegressor
+        A reconstructed scikit-learn GradientBoostingRegressor instance.
+    """
 
     pre_model = GradientBoostingRegressor()
     pre_get_params = list(pre_model.get_params().keys())

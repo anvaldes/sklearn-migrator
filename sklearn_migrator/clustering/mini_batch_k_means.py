@@ -29,7 +29,22 @@ all_features = [
     'precompute_distances'
 ]
 
-def serialize_mini_batch_kmeans(model, version_in):
+def serialize_mini_batch_kmeans(model: MiniBatchKMeans, version_in: str) -> dict:
+    """
+    Serialize a fitted MiniBatchKMeans into a JSON-compatible dictionary.
+
+    Parameters
+    ----------
+    model : MiniBatchKMeans
+        A fitted scikit-learn MiniBatchKMeans instance.
+    version_in : str
+        The sklearn version used to train the model (e.g. '1.2.0').
+
+    Returns
+    -------
+    dict
+        A dictionary containing all necessary data to reconstruct the model.
+    """
 
     metadata = {}
 
@@ -79,7 +94,22 @@ def serialize_mini_batch_kmeans(model, version_in):
     return metadata
 
 
-def deserialize_mini_batch_kmeans(data, version_out):
+def deserialize_mini_batch_kmeans(data: dict, version_out: str) -> MiniBatchKMeans:
+    """
+    Reconstruct a MiniBatchKMeans from a serialized dictionary.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary produced by serialize_mini_batch_kmeans.
+    version_out : str
+        The sklearn version of the target environment (e.g. '1.7.0').
+
+    Returns
+    -------
+    MiniBatchKMeans
+        A reconstructed scikit-learn MiniBatchKMeans instance.
+    """
 
     version_in = data['version_sklearn_in']
     init_params = data['init_params']

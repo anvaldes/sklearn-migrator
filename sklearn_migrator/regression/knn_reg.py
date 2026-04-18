@@ -7,7 +7,22 @@ all_features = [
     "feature_names_in_",
 ]
 
-def serialize_knn_reg(model, version_in):
+def serialize_knn_reg(model: KNeighborsRegressor, version_in: str) -> dict:
+    """
+    Serialize a fitted KNeighborsRegressor into a JSON-compatible dictionary.
+
+    Parameters
+    ----------
+    model : KNeighborsRegressor
+        A fitted scikit-learn KNeighborsRegressor instance.
+    version_in : str
+        The sklearn version used to train the model (e.g. '1.2.0').
+
+    Returns
+    -------
+    dict
+        A dictionary containing all necessary data to reconstruct the model.
+    """
 
     metadata = {}
 
@@ -40,7 +55,22 @@ def serialize_knn_reg(model, version_in):
     return metadata
 
 
-def deserialize_knn_reg(data, version_out):
+def deserialize_knn_reg(data: dict, version_out: str) -> KNeighborsRegressor:
+    """
+    Reconstruct a KNeighborsRegressor from a serialized dictionary.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary produced by serialize_knn_reg.
+    version_out : str
+        The sklearn version of the target environment (e.g. '1.7.0').
+
+    Returns
+    -------
+    KNeighborsRegressor
+        A reconstructed scikit-learn KNeighborsRegressor instance.
+    """
 
     init_params = data["init_params"]
     other_params = data["other_params"]

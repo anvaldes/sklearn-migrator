@@ -10,14 +10,42 @@ all_features = [
     'feature_names_in_',
 ]
 
+def version_tuple(version: str) -> tuple:
+    """
+    Convert a version string into a comparable tuple of integers.
 
-def version_tuple(version):
+    Parameters
+    ----------
+    version : str
+        Version string (e.g. '1.2.0').
+
+    Returns
+    -------
+    tuple
+        Tuple of integers (major, minor, patch).
+    """
+
     parts = version.split(".")
     parts = (parts + ["0", "0"])[:3]
     return tuple(int(p) for p in parts)
 
 
-def serialize_agglomerative(model, version_in):
+def serialize_agglomerative(model: AgglomerativeClustering, version_in: str) -> dict:
+    """
+    Serialize a fitted AgglomerativeClustering into a JSON-compatible dictionary.
+
+    Parameters
+    ----------
+    model : AgglomerativeClustering
+        A fitted scikit-learn AgglomerativeClustering instance.
+    version_in : str
+        The sklearn version used to train the model (e.g. '1.2.0').
+
+    Returns
+    -------
+    dict
+        A dictionary containing all necessary data to reconstruct the model.
+    """
 
     metadata = {}
 
@@ -64,7 +92,22 @@ def serialize_agglomerative(model, version_in):
     return metadata
 
 
-def deserialize_agglomerative(data, version_out):
+def deserialize_agglomerative(data: dict, version_out: str) -> AgglomerativeClustering:
+    """
+    Reconstruct an AgglomerativeClustering from a serialized dictionary.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary produced by serialize_agglomerative.
+    version_out : str
+        The sklearn version of the target environment (e.g. '1.7.0').
+
+    Returns
+    -------
+    AgglomerativeClustering
+        A reconstructed scikit-learn AgglomerativeClustering instance.
+    """
 
     init_params = data['init_params'].copy()
     other_params = data['other_params']

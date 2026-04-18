@@ -21,7 +21,22 @@ all_features = [
     'feature_names_in_'
 ]
 
-def serialize_logistic_regression_clf(model, version_in):
+def serialize_logistic_regression_clf(model: LogisticRegression, version_in: str) -> dict:
+    """
+    Serialize a fitted LogisticRegression into a JSON-compatible dictionary.
+
+    Parameters
+    ----------
+    model : LogisticRegression
+        A fitted scikit-learn LogisticRegression instance.
+    version_in : str
+        The sklearn version used to train the model (e.g. '1.2.0').
+
+    Returns
+    -------
+    dict
+        A dictionary containing all necessary data to reconstruct the model.
+    """
 
     metadata = {
         'classes_': model.classes_.tolist(),
@@ -58,8 +73,22 @@ def serialize_logistic_regression_clf(model, version_in):
 
     return metadata
 
+def deserialize_logistic_regression_clf(data: dict, version_out: str) -> LogisticRegression:
+    """
+    Reconstruct a LogisticRegression from a serialized dictionary.
 
-def deserialize_logistic_regression_clf(data, version_out):
+    Parameters
+    ----------
+    data : dict
+        Dictionary produced by serialize_logistic_regression_clf.
+    version_out : str
+        The sklearn version of the target environment (e.g. '1.7.0').
+
+    Returns
+    -------
+    LogisticRegression
+        A reconstructed scikit-learn LogisticRegression instance.
+    """
 
     model = LogisticRegression(data['params'])
     

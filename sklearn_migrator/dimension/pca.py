@@ -25,7 +25,22 @@ all_features = [
     ]
 
 
-def serialize_pca(model, version_in):
+def serialize_pca(model: PCA, version_in: str) -> dict:
+    """
+    Serialize a fitted PCA into a JSON-compatible dictionary.
+
+    Parameters
+    ----------
+    model : PCA
+        A fitted scikit-learn PCA instance.
+    version_in : str
+        The sklearn version used to train the model (e.g. '1.2.0').
+
+    Returns
+    -------
+    dict
+        A dictionary containing all necessary data to reconstruct the model.
+    """
 
     metadata = {}
 
@@ -67,7 +82,23 @@ def serialize_pca(model, version_in):
     return metadata
 
 
-def deserialize_pca(data, version_out):
+def deserialize_pca(data: dict, version_out: str) -> PCA:
+    """
+    Reconstruct a PCA from a serialized dictionary.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary produced by serialize_pca.
+    version_out : str
+        The sklearn version of the target environment (e.g. '1.7.0').
+
+    Returns
+    -------
+    PCA
+        A reconstructed scikit-learn PCA instance.
+    """
+    
     version_in = data['version_sklearn_in']
     init_params = data['init_params']
 
