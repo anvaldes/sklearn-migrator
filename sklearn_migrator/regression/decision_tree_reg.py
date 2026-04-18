@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from sklearn.tree._tree import Tree
 from sklearn.tree import DecisionTreeRegressor
@@ -194,7 +195,15 @@ def deserialize_decision_tree_reg(data, version_out):
     for af in all_features:
         try:
             new_tree.__dict__[af] = data['other_params'][af]
-        except:
-            pass
+        except KeyError:
+            pass  # field not present in this sklearn version
+        except AttributeError:
+            pass  # attribute not settable in this sklearn version
+        except Exception as e:
+            warnings.warn(
+                f"Could not set field '{af}' on {type(new_tree).__name__}: "
+                f"{type(e).__name__}: {e}. Field will be skipped.",
+                UserWarning,
+            )
 
     return new_tree

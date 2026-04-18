@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from sklearn.ensemble import AdaBoostRegressor
 from ..regression.decision_tree_reg import serialize_decision_tree_reg
@@ -129,11 +130,18 @@ def deserialize_adaboost_reg(data, version_out):
         try:
             val = data['other_params'][af]
         except KeyError:
-            continue
-
+            continue  # field not present in this sklearn version
         if af in ['n_features_in_', 'n_features_'] and (val is None or n_features is not None):
             continue
-
-        new_model.__dict__[af] = val
+        try:
+            new_model.__dict__[af] = val
+        except AttributeError:
+            pass  # attribute not settable in this sklearn version
+        except Exception as e:
+            warnings.warn(
+                f"Could not set field '{af}' on {type(new_model).__name__}: "
+                f"{type(e).__name__}: {e}. Field will be skipped.",
+                UserWarning,
+            )
 
     return new_model

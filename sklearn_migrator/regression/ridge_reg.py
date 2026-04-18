@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from sklearn.linear_model import Ridge
 
@@ -55,7 +56,15 @@ def deserialize_ridge_reg(data, version_out):
     for af in all_features:
         try:
             model.__dict__[af] = data['other_params'][af]
-        except:
-            pass
+        except KeyError:
+            pass  # field not present in this sklearn version
+        except AttributeError:
+            pass  # attribute not settable in this sklearn version
+        except Exception as e:
+            warnings.warn(
+                f"Could not set field '{af}' on {type(model).__name__}: "
+                f"{type(e).__name__}: {e}. Field will be skipped.",
+                UserWarning,
+            )
 
     return model

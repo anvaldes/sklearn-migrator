@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier
 from ..regression.decision_tree_reg import serialize_decision_tree_reg
@@ -191,11 +192,19 @@ def deserialize_gradient_boosting_clf(data, version_out):
         new_model._loss = get_loss_object(data['loss'])(data['dummy_clf']['n_classes_'])
     
     new_model.train_score_ = data['train_score_']
-
+    
     for af in all_features:
         try:
             new_model.__dict__[af] = data['other_params'][af]
-        except:
-            pass
+        except KeyError:
+            pass  # field not present in this sklearn version
+        except AttributeError:
+            pass  # attribute not settable in this sklearn version
+        except Exception as e:
+            warnings.warn(
+                f"Could not set field '{af}' on {type(new_model).__name__}: "
+                f"{type(e).__name__}: {e}. Field will be skipped.",
+                UserWarning,
+            )
 
     return new_model
