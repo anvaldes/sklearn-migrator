@@ -134,6 +134,32 @@ class Migrated_SVC:
         )
         f = K @ self._alpha + self._b
         return f
+    
+    def _sigmoid_predict(self, f: np.ndarray) -> np.ndarray:
+        """
+        Apply Platt scaling to decision function values using a numerically
+        stable two-branch sigmoid, mirroring libsvm's sigmoid_predict().
+
+        For fApB >= 0 uses exp(-fApB) / (1 + exp(-fApB)) and for
+        fApB < 0 uses 1 / (1 + exp(fApB)), avoiding overflow in both cases.
+
+        Parameters
+        ----------
+        f : np.ndarray of shape (n_samples,)
+            Decision function values from decision_function().
+
+        Returns
+        -------
+        np.ndarray of shape (n_samples,)
+            Probability estimates for the positive class (classes_[1]).
+        """
+
+        fApB = self.probA_ * f + self.probB_
+        pos = fApB >= 0
+        result = np.empty_like(fApB)
+        result[pos]  = np.exp(-fApB[pos])  / (1.0 + np.exp(-fApB[pos]))
+        result[~pos] = 1.0                 / (1.0 + np.exp( fApB[~pos]))
+        return result
 
     def predict_proba(self, X) -> np.ndarray:
         """
@@ -159,8 +185,8 @@ class Migrated_SVC:
             raise AttributeError("predict_proba unavailable: missing probA/probB (probability=True in the original model).")
 
         f = self.decision_function(X)
-        p0 = 1.0 / (1.0 + np.exp(self.probA_ * (-f) + self.probB_))
-        p1 = 1.0 - p0
+        p1 = self._sigmoid_predict(f)
+        p0 = 1.0 - p1
         probs = np.vstack([p0, p1]).T
         return probs
 
