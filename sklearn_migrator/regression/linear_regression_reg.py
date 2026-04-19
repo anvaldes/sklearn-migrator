@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
@@ -12,7 +13,22 @@ all_features = [
     'tol'
 ]
 
-def serialize_linear_regression_reg(model, version_in):
+def serialize_linear_regression_reg(model: LinearRegression, version_in: str) -> dict:
+    """
+    Serialize a fitted LinearRegression into a JSON-compatible dictionary.
+
+    Parameters
+    ----------
+    model : LinearRegression
+        A fitted scikit-learn LinearRegression instance.
+    version_in : str
+        The sklearn version used to train the model (e.g. '1.2.0').
+
+    Returns
+    -------
+    dict
+        A dictionary containing all necessary data to reconstruct the model.
+    """
 
     metadata = {
         'coef_': model.coef_.tolist(),
@@ -48,7 +64,22 @@ def serialize_linear_regression_reg(model, version_in):
     return metadata
 
 
-def deserialize_linear_regression_reg(data, version_out):
+def deserialize_linear_regression_reg(data: dict, version_out: str) -> LinearRegression:
+    """
+    Reconstruct a LinearRegression from a serialized dictionary.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary produced by serialize_linear_regression_reg.
+    version_out : str
+        The sklearn version of the target environment (e.g. '1.7.0').
+
+    Returns
+    -------
+    LinearRegression
+        A reconstructed scikit-learn LinearRegression instance.
+    """
 
     model = LinearRegression()
 
@@ -60,7 +91,15 @@ def deserialize_linear_regression_reg(data, version_out):
     for af in all_features:
         try:
             model.__dict__[af] = data['other_params'][af]
-        except:
-            pass
+        except KeyError:
+            pass  # field not present in this sklearn version
+        except AttributeError:
+            pass  # attribute not settable in this sklearn version
+        except Exception as e:
+            warnings.warn(
+                f"Could not set field '{af}' on {type(model).__name__}: "
+                f"{type(e).__name__}: {e}. Field will be skipped.",
+                UserWarning,
+            )
 
     return model

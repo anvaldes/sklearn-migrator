@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier
 from ..regression.decision_tree_reg import serialize_decision_tree_reg
@@ -40,27 +41,54 @@ all_features = [
 ]
 
 
-def version_tuple(version):
+def version_tuple(version: str) -> tuple:
+    """
+    Convert a version string into a comparable tuple of integers.
 
-  version_split = version.split('.')
+    Parameters
+    ----------
+    version : str
+        Version string (e.g. '1.2.0').
 
-  if len(version_split) == 1:
-    new_version = (int(version_split[0]), 0, 0)
-  elif len(version_split) == 2:
-    new_version = (int(version_split[0]), int(version_split[1]), 0)
-  elif len(version_split) == 3:
-    new_version = (int(version_split[0]), int(version_split[1]), int(version_split[2]))
-  else:
-    new_version = 'Formato no valido'
+    Returns
+    -------
+    tuple
+        Tuple of integers (major, minor, patch).
+    """
 
-  return new_version
+    version_split = version.split('.')
+
+    if len(version_split) == 1:
+        new_version = (int(version_split[0]), 0, 0)
+    elif len(version_split) == 2:
+        new_version = (int(version_split[0]), int(version_split[1]), 0)
+    elif len(version_split) == 3:
+        new_version = (int(version_split[0]), int(version_split[1]), int(version_split[2]))
+    else:
+        new_version = 'Formato no valido'
+
+    return new_version
 
 
 if version_tuple(sklearn.__version__) < version_tuple('1.4.0'):
 
     from sklearn.ensemble import _gb_losses
 
-    def get_loss_object(loss_str):
+    def get_loss_object(loss_str: str) -> type:
+        """
+        Return the appropriate loss class for the given loss string.
+
+        Parameters
+        ----------
+        loss_str : str
+            Loss function name (e.g. 'log_loss', 'exponential', 'multinomial').
+
+        Returns
+        -------
+        type
+            The corresponding loss class for the current sklearn version.
+        """
+
         mapping = {
             'deviance': lambda: _gb_losses.BinomialDeviance,
             'log_loss': lambda: _gb_losses.BinomialDeviance,
@@ -72,7 +100,21 @@ else:
 
     from sklearn._loss.loss import HalfBinomialLoss, ExponentialLoss, HalfMultinomialLoss
 
-    def get_loss_object(loss_str):
+    def get_loss_object(loss_str: str) -> type:
+        """
+        Return the appropriate loss class for the given loss string.
+
+        Parameters
+        ----------
+        loss_str : str
+            Loss function name (e.g. 'log_loss', 'exponential', 'multinomial').
+
+        Returns
+        -------
+        type
+            The corresponding loss class for the current sklearn version.
+        """
+    
         mapping = {
             'deviance': lambda: HalfBinomialLoss,
             'log_loss': lambda: HalfBinomialLoss,
@@ -82,7 +124,22 @@ else:
         return mapping[loss_str]()
 
 
-def serialize_gradient_boosting_clf(model, version_in):
+def serialize_gradient_boosting_clf(model: GradientBoostingClassifier, version_in: str) -> dict:
+    """
+    Serialize a fitted GradientBoostingClassifier into a JSON-compatible dictionary.
+
+    Parameters
+    ----------
+    model : GradientBoostingClassifier
+        A fitted scikit-learn GradientBoostingClassifier instance.
+    version_in : str
+        The sklearn version used to train the model (e.g. '1.2.0').
+
+    Returns
+    -------
+    dict
+        A dictionary containing all necessary data to reconstruct the model.
+    """
 
     metadata = {}
 
@@ -145,8 +202,22 @@ def serialize_gradient_boosting_clf(model, version_in):
 
     return metadata
 
+def deserialize_gradient_boosting_clf(data: dict, version_out: str) -> GradientBoostingClassifier:
+    """
+    Reconstruct a GradientBoostingClassifier from a serialized dictionary.
 
-def deserialize_gradient_boosting_clf(data, version_out):
+    Parameters
+    ----------
+    data : dict
+        Dictionary produced by serialize_gradient_boosting_clf.
+    version_out : str
+        The sklearn version of the target environment (e.g. '1.7.0').
+
+    Returns
+    -------
+    GradientBoostingClassifier
+        A reconstructed scikit-learn GradientBoostingClassifier instance.
+    """
 
     pre_model = GradientBoostingClassifier()
     pre_get_params = list(pre_model.get_params().keys())
@@ -191,11 +262,19 @@ def deserialize_gradient_boosting_clf(data, version_out):
         new_model._loss = get_loss_object(data['loss'])(data['dummy_clf']['n_classes_'])
     
     new_model.train_score_ = data['train_score_']
-
+    
     for af in all_features:
         try:
             new_model.__dict__[af] = data['other_params'][af]
-        except:
-            pass
+        except KeyError:
+            pass  # field not present in this sklearn version
+        except AttributeError:
+            pass  # attribute not settable in this sklearn version
+        except Exception as e:
+            warnings.warn(
+                f"Could not set field '{af}' on {type(new_model).__name__}: "
+                f"{type(e).__name__}: {e}. Field will be skipped.",
+                UserWarning,
+            )
 
     return new_model
