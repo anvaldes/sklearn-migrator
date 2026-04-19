@@ -241,7 +241,7 @@ jobs:
           THRESHOLD = 1e-2
           name_model = "${{ matrix.name_model }}"
 
-          df = pd.read_csv(f"performance/performance_{name_model}.csv", index_col=0)
+          df = pd.read_csv(f"performance/performance_{name_model}.csv")
           print(df)
 
           max_error = df.max(axis=1).max()
