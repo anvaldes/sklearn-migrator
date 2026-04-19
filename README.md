@@ -128,6 +128,22 @@ versions = [
 | ...       | ...    | ...    | ... | ...   |
 | 1.7.2     | ✅      | ✅      | ... | ✅     |
 
+### 📊 Validation Metric
+
+Each migration pair `(version_in, version_out)` is validated using:
+
+$$\max |y_{\text{in}} - y_{\text{out}}| < 10^{-2}$$
+
+Where:
+- $y_{\text{in}}$: predictions from the model in the **source** version
+- $y_{\text{out}}$: predictions from the migrated model in the **target** version
+
+The worst case across all 1,024 pairs is obtained via:
+
+```python
+df_performance.abs().max().max()  # global worst case (32x32 matrix)
+```
+
 > ⚠️ All 1,024 combinations and 21 models are automatically tested on every push via CI/CD, using isolated Docker environments for each sklearn version. Each model is validated under a representative parameter configuration; exhaustive combinatorial testing of all parameter combinations is outside the current scope.
 
 ---

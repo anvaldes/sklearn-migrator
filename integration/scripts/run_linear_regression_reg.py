@@ -167,7 +167,7 @@ def container_execution(inp_ver, out_ver):
     try:
         df_input  = pd.read_csv(f"{base_input_dir}/y_pred_input.csv")
         df_output = pd.read_csv(f"{base_output_dir}/y_pred_output.csv")
-        return float(((df_input - df_output)["0"]).max())
+        return float(((df_input - df_output)["0"]).abs().max())
     except Exception as e:
         print(f"COMPARISON: ❌\nERROR: {e}")
         return None
@@ -225,7 +225,7 @@ def run_all():
 
     os.makedirs("performance", exist_ok=True)
     df_performance.index = output_versions
-    df_performance.to_csv(f"performance/performance_{name_model}.csv")
+    df_performance.to_csv(f"performance/performance_{name_model}.csv", index = False)
 
     return df_performance
 
