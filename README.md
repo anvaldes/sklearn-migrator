@@ -43,7 +43,7 @@ However:
 ### ✔ Remove dependency on pickle/joblib for long-term storage  
 ### ✔ Enable reproducible ML pipelines across environments  
 
-This library has been validated across **900 version migration pairs** (from → to), covering:
+This library has been validated across **1,024 version migration pairs** (from → to), covering:
 
 0.21.3 → 1.7.2
 
@@ -90,7 +90,7 @@ This library has been validated across **900 version migration pairs** (from →
 |----------------------|-----------|
 | KMeans               | ✅ |
 | MiniBatchKMeans      | ✅ |
-| Agglomerative     | ✅ |
+| Agglomerative        | ✅ |
 
 
 ---
@@ -103,15 +103,13 @@ This library has been validated across **900 version migration pairs** (from →
 
 ---
 
----
-
 ## 🔢 Version Compatibility Matrix
 
 The library supports model migrations across the full matrix:
 
 - **32 versions**  
-- **1.024 migration pairs**  
-- Fully tested using automated environments
+- **1,024 migration pairs**  
+- Fully tested using automated environments via CI/CD on every push
 
 ```python
 versions = [
@@ -130,7 +128,7 @@ versions = [
 | ...       | ...    | ...    | ... | ...   |
 | 1.7.2     | ✅      | ✅      | ... | ✅     |
 
-> ⚠️ All 1.024 combinations and 21 models were tested and validated in real environments.
+> ⚠️ All 1,024 combinations and 21 models are automatically tested on every push via CI/CD, using isolated Docker environments for each sklearn version. Each model is validated under a representative parameter configuration; exhaustive combinatorial testing of all parameter combinations is outside the current scope.
 
 ---
 
@@ -153,16 +151,15 @@ pip install sklearn-migrator
 
 ## 1. Using two python environments
 
-You can serialized the model from a environment with a scikit-learn version (for example `1.5.0`) and then you can deserialized the model from another environment with a other version (for exmaple `1.7.0`).
+You can serialize the model from an environment with a scikit-learn version (for example `1.5.0`) and then deserialize the model from another environment with a different version (for example `1.7.0`).
 
 The deserialized model has the version of the environment where you deserialized it. In this case `1.7.0`.
 
-As you can see is very important understand what is the version of scikit learn from you want to migrate to create and environment with this version to deserialized the model. On the other side you have to understand to what version you want to migrate to again create and environment with this version of scikit-learn.
+It is important to understand what version of scikit-learn you want to migrate from, and what version you want to migrate to, in order to create the appropriate environments for serialization and deserialization.
 
 ### a. Serialize the model
 
 ```python
-
 import json
 import sklearn
 import numpy as np
@@ -177,9 +174,9 @@ version_sklearn_in = sklearn.__version__
 model = RandomForestRegressor()
 model.fit(X_train, y_train)
 
-# If you want to compare output from this model and the new model with his new version
+# If you want to compare output from this model and the new model with its new version
 y_pred = pd.DataFrame(model.predict(X_test))
-y_pred.to_csv('y_pred.csv', index = False)
+y_pred.to_csv('y_pred.csv', index=False)
 
 all_data = serialize_random_forest_reg(model, version_sklearn_in)
 
@@ -199,7 +196,7 @@ with open("/input/model.json", "w") as f:
     json.dump(all_data, f, default=convert)
 ```
 
-### b. Desarialize the model
+### b. Deserialize the model
 
 ```python
 import json
@@ -216,15 +213,15 @@ version_sklearn_out = sklearn.__version__
 with open("/input/model.json", "r") as f:
     all_data = json.load(f)
 
-new_model_reg_rfr = deserialize_random_forest_reg(all_data, version_sklearn_out)
+new_model = deserialize_random_forest_reg(all_data, version_sklearn_out)
 
 # Now you have your model in this new version
 
 # If you want to compare the outputs
 y_pred_new = pd.DataFrame(new_model.predict(X_test))
-y_pred_new.to_csv('y_pred_new.csv', index = False)
+y_pred_new.to_csv('y_pred_new.csv', index=False)
 
-# Of course you compare "y_pred.csv" with "y_pred_new.csv"
+# Compare "y_pred.csv" with "y_pred_new.csv"
 ```
 
 ## 2. Docker: Step by Step
@@ -239,18 +236,14 @@ i. Create in your Desktop the next folder:
 
 And copy your `model.pkl` in this folder.
 
-ii. Go to the repo: https://github.com/anvaldes/environments_scikit_learn and find out for the Dockerfile and requirements.txt for the corresponding input scikit-learn version.
-
-You will have this:
+ii. The Dockerfiles and requirements for all supported input versions are available in the `integration/environments/input/` directory of this repository. Copy the files for your input version (e.g., `1.5.0`):
 
 ```bash
 /test_github/input/1.5.0/Dockerfile_input
 /test_github/input/1.5.0/requirements_input.txt
 ```
 
-iii. Go to the repo: https://github.com/anvaldes/environments_scikit_learn and find out for the Dockerfile and requirements.txt for the output corresponding scikit-learn version.
-
-You will have this:
+iii. The Dockerfiles and requirements for all supported output versions are available in the `integration/environments/output/` directory of this repository. Copy the files for your output version (e.g., `1.7.0`):
 
 ```bash
 /test_github/output/1.7.0/Dockerfile_output
@@ -293,7 +286,7 @@ with open("input_model/all_data.json", "w") as f:
 fake_row = np.array([[0.5, -1.2, 0.3, 1.1, -0.7, 0.9, 0.0, -0.3, 1.5, 0.2]])
 
 y_pred = pd.DataFrame(model.predict_proba(fake_row))
-y_pred.to_csv('input_model/y_pred.csv', index = False)
+y_pred.to_csv('input_model/y_pred.csv', index=False)
 ```
 
 v. Now you create your `output.py`:
@@ -322,7 +315,7 @@ joblib.dump(new_model, 'output_model/new_model.pkl')
 fake_row = np.array([[0.5, -1.2, 0.3, 1.1, -0.7, 0.9, 0.0, -0.3, 1.5, 0.2]])
 
 y_pred_new = pd.DataFrame(new_model.predict_proba(fake_row))
-y_pred_new.to_csv('output_model/y_pred_new.csv', index = False)
+y_pred_new.to_csv('output_model/y_pred_new.csv', index=False)
 ```
 
 vi. Now you copy all the files:
@@ -333,7 +326,7 @@ cp input/1.5.0/* output/1.7.0/* .
 
 vii. Now you create two folders: `input_model/` and `output_model/`.
 
-viii. Execute the next commands in your terminal (you should be in the root of `test_github/` folder)
+viii. Execute the next commands in your terminal (you should be in the root of `test_github/` folder):
 
 ```bash
 docker build -f Dockerfile_input -t image_input_1.5.0 .
@@ -485,16 +478,17 @@ from sklearn_migrator.dimension.pca import (
 )
 ```
 
-
 ---
 
 ## 🔧 Development
 
-### Run tests
+### Run tests locally
 
 ```bash
 pytest tests/
 ```
+
+Integration tests run automatically on every push via CI/CD.
 
 ---
 

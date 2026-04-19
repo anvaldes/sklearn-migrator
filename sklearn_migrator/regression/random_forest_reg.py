@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from .decision_tree_reg import serialize_decision_tree_reg
@@ -27,7 +28,22 @@ all_features = [
     'monotonic_cst',
 ]
 
-def serialize_random_forest_reg(model, version_in):
+def serialize_random_forest_reg(model: RandomForestRegressor, version_in: str) -> dict:
+    """
+    Serialize a fitted RandomForestRegressor into a JSON-compatible dictionary.
+
+    Parameters
+    ----------
+    model : RandomForestRegressor
+        A fitted scikit-learn RandomForestRegressor instance.
+    version_in : str
+        The sklearn version used to train the model (e.g. '1.2.0').
+
+    Returns
+    -------
+    dict
+        A dictionary containing all necessary data to reconstruct the model.
+    """
 
     estimators = model.estimators_
     estimators_ser = [serialize_decision_tree_reg(e, version_in) for e in estimators]
@@ -76,7 +92,22 @@ def serialize_random_forest_reg(model, version_in):
     return metadata
 
 
-def deserialize_random_forest_reg(data, version_out):
+def deserialize_random_forest_reg(data: dict, version_out: str) -> RandomForestRegressor:
+    """
+    Reconstruct a RandomForestRegressor from a serialized dictionary.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary produced by serialize_random_forest_reg.
+    version_out : str
+        The sklearn version of the target environment (e.g. '1.7.0').
+
+    Returns
+    -------
+    RandomForestRegressor
+        A reconstructed scikit-learn RandomForestRegressor instance.
+    """
 
     pre_model = RandomForestRegressor()
     pre_get_params = list(pre_model.get_params().keys())
@@ -97,8 +128,16 @@ def deserialize_random_forest_reg(data, version_out):
     for af in all_features:
         try:
             new_model.__dict__[af] = data['other_params'][af]
-        except:
-            pass
+        except KeyError:
+            pass  # field not present in this sklearn version
+        except AttributeError:
+            pass  # attribute not settable in this sklearn version
+        except Exception as e:
+            warnings.warn(
+                f"Could not set field '{af}' on {type(new_model).__name__}: "
+                f"{type(e).__name__}: {e}. Field will be skipped.",
+                UserWarning,
+            )
 
     n_features = (data['other_params']['n_features'] or data['other_params']['n_features_in'])
 

@@ -2,7 +2,20 @@ import pandas as pd
 import numpy as np
 from sklearn.svm import SVC
 
+
 class Migrated_SVC:
+    """
+    A pure-NumPy reimplementation of a binary SVC for cross-version compatibility.
+
+    This class reconstructs the prediction behaviour of a fitted scikit-learn
+    SVC without relying on the original sklearn object, making it safe to use
+    across different sklearn versions.
+
+    Parameters
+    ----------
+    metadata : dict
+        Dictionary produced by serialize_svc.
+    """
 
     def __init__(self, metadata):
 
@@ -29,10 +42,48 @@ class Migrated_SVC:
             self.probA_ = np.float64(np.asarray(self.dict["probA"]).item())
             self.probB_ = np.float64(np.asarray(self.dict["probB"]).item())
 
-    def _as_np(self, a):
+    def _as_np(self, a) -> np.ndarray:
+        """
+        Convert a pandas DataFrame or array-like object to a numpy array.
+
+        Parameters
+        ----------
+        a : array-like or pd.DataFrame
+            Input data.
+
+        Returns
+        -------
+        np.ndarray
+            Numpy array representation of the input.
+        """
+
         return a.to_numpy() if hasattr(a, "to_numpy") else np.asarray(a)
 
-    def _kernel_fn(self, X, Y, kind="rbf", gamma=None, coef0=0.0, degree=3):
+    def _kernel_fn(self, X, Y, kind: str = "rbf", gamma: float = None, coef0: float = 0.0, degree: int = 3) -> np.ndarray:
+        """
+        Compute the kernel matrix between X and Y.
+
+        Parameters
+        ----------
+        X : array-like
+            First input matrix of shape (n_samples_X, n_features).
+        Y : array-like
+            Second input matrix of shape (n_samples_Y, n_features).
+        kind : str
+            Kernel type: 'linear', 'rbf', 'poly', or 'sigmoid'.
+        gamma : float, optional
+            Kernel coefficient for 'rbf', 'poly' and 'sigmoid'.
+        coef0 : float
+            Independent term for 'poly' and 'sigmoid' kernels.
+        degree : int
+            Degree for the polynomial kernel.
+
+        Returns
+        -------
+        np.ndarray
+            Kernel matrix of shape (n_samples_X, n_samples_Y).
+        """
+
         X = self._as_np(X).astype(float, copy=False)
         Y = self._as_np(Y).astype(float, copy=False)
 
@@ -58,7 +109,21 @@ class Migrated_SVC:
 
         raise ValueError(f"Unsupported kernel: {kind}")
 
-    def decision_function(self, X):
+    def decision_function(self, X) -> np.ndarray:
+        """
+        Compute the decision function for the input samples.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Input data.
+
+        Returns
+        -------
+        np.ndarray
+            Decision function values of shape (n_samples,).
+        """
+
         K = self._kernel_fn(
             X,
             self._sv,
@@ -70,7 +135,26 @@ class Migrated_SVC:
         f = K @ self._alpha + self._b
         return f
 
-    def predict_proba(self, X):
+    def predict_proba(self, X) -> np.ndarray:
+        """
+        Compute class probabilities using Platt scaling.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Input data.
+
+        Returns
+        -------
+        np.ndarray
+            Class probabilities of shape (n_samples, 2).
+
+        Raises
+        ------
+        AttributeError
+            If the original model was not trained with probability=True.
+        """
+
         if not self._has_proba:
             raise AttributeError("predict_proba unavailable: missing probA/probB (probability=True in the original model).")
 
@@ -80,12 +164,42 @@ class Migrated_SVC:
         probs = np.vstack([p0, p1]).T
         return probs
 
-    def predict(self, X):
+    def predict(self, X) -> np.ndarray:
+        """
+        Predict class labels for the input samples.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Input data.
+
+        Returns
+        -------
+        np.ndarray
+            Predicted class labels of shape (n_samples,).
+        """
+
         f = self.decision_function(X)
         y = np.where(f > 0, self.classes_[1], self.classes_[0])
         return y
 
-def serialize_svc(model, version_in):
+def serialize_svc(model: SVC, version_in: str) -> dict:
+    """
+    Serialize a fitted SVC into a JSON-compatible dictionary.
+
+    Parameters
+    ----------
+    model : SVC
+        A fitted scikit-learn SVC instance.
+    version_in : str
+        The sklearn version used to train the model (e.g. '1.2.0').
+
+    Returns
+    -------
+    dict
+        A dictionary containing all necessary data to reconstruct the model.
+    """
+
     probA = getattr(model, "probA_", None)
     probB = getattr(model, "probB_", None)
     if probA is not None:
@@ -111,7 +225,23 @@ def serialize_svc(model, version_in):
     }
     return metadata
 
-def deserialize_svc(data, version_out):
+def deserialize_svc(data: dict, version_out: str) -> Migrated_SVC:
+    """
+    Reconstruct a Migrated_SVC from a serialized dictionary.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary produced by serialize_svc.
+    version_out : str
+        The sklearn version of the target environment (e.g. '1.7.0').
+
+    Returns
+    -------
+    Migrated_SVC
+        A reconstructed Migrated_SVC instance compatible with the target environment.
+    """
+
     required = ["support_vectors_", "dual_coef_", "intercept_", "classes_", "params"]
     for k in required:
         if k not in data:

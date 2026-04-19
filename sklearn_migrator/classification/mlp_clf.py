@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from sklearn.neural_network import MLPClassifier
 
@@ -34,7 +35,22 @@ all_features = [
     'warm_start'
     ]
 
-def serialize_mlp_clf(model, version_in):
+def serialize_mlp_clf(model: MLPClassifier, version_in: str) -> dict:
+    """
+    Serialize a fitted MLPClassifier into a JSON-compatible dictionary.
+
+    Parameters
+    ----------
+    model : MLPClassifier
+        A fitted scikit-learn MLPClassifier instance.
+    version_in : str
+        The sklearn version used to train the model (e.g. '1.2.0').
+
+    Returns
+    -------
+    dict
+        A dictionary containing all necessary data to reconstruct the model.
+    """
 
     metadata = {}
 
@@ -87,8 +103,22 @@ def serialize_mlp_clf(model, version_in):
 
     return metadata
 
+def deserialize_mlp_clf(data: dict, version_out: str) -> MLPClassifier:
+    """
+    Reconstruct a MLPClassifier from a serialized dictionary.
 
-def deserialize_mlp_clf(data, version_out):
+    Parameters
+    ----------
+    data : dict
+        Dictionary produced by serialize_mlp_clf.
+    version_out : str
+        The sklearn version of the target environment (e.g. '1.7.0').
+
+    Returns
+    -------
+    MLPClassifier
+        A reconstructed scikit-learn MLPClassifier instance.
+    """
   
     version_in = data['version_sklearn_in']
     serialized_mlp = data['serialized_mlp']
@@ -107,7 +137,15 @@ def deserialize_mlp_clf(data, version_out):
     for af in all_features:
         try:
             new_model.__dict__[af] = data['other_params'][af]
-        except:
-           pass
+        except KeyError:
+            pass  # field not present in this sklearn version
+        except AttributeError:
+            pass  # attribute not settable in this sklearn version
+        except Exception as e:
+            warnings.warn(
+                f"Could not set field '{af}' on {type(new_model).__name__}: "
+                f"{type(e).__name__}: {e}. Field will be skipped.",
+                UserWarning,
+            )
     
     return new_model

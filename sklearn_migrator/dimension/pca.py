@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from sklearn.decomposition import PCA
 
@@ -24,7 +25,22 @@ all_features = [
     ]
 
 
-def serialize_pca(model, version_in):
+def serialize_pca(model: PCA, version_in: str) -> dict:
+    """
+    Serialize a fitted PCA into a JSON-compatible dictionary.
+
+    Parameters
+    ----------
+    model : PCA
+        A fitted scikit-learn PCA instance.
+    version_in : str
+        The sklearn version used to train the model (e.g. '1.2.0').
+
+    Returns
+    -------
+    dict
+        A dictionary containing all necessary data to reconstruct the model.
+    """
 
     metadata = {}
 
@@ -66,7 +82,23 @@ def serialize_pca(model, version_in):
     return metadata
 
 
-def deserialize_pca(data, version_out):
+def deserialize_pca(data: dict, version_out: str) -> PCA:
+    """
+    Reconstruct a PCA from a serialized dictionary.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary produced by serialize_pca.
+    version_out : str
+        The sklearn version of the target environment (e.g. '1.7.0').
+
+    Returns
+    -------
+    PCA
+        A reconstructed scikit-learn PCA instance.
+    """
+    
     version_in = data['version_sklearn_in']
     init_params = data['init_params']
 
@@ -84,13 +116,19 @@ def deserialize_pca(data, version_out):
 
     for af in all_features:
         if af not in other_params:
-            continue
-
+            continue  # field not present in this sklearn version
         value = other_params[af]
-
         if af in array_fields and value is not None and not isinstance(value, np.ndarray):
             value = np.array(value)
-
-        new_model.__dict__[af] = value
+        try:
+            new_model.__dict__[af] = value
+        except AttributeError:
+            pass  # attribute not settable in this sklearn version
+        except Exception as e:
+            warnings.warn(
+                f"Could not set field '{af}' on {type(new_model).__name__}: "
+                f"{type(e).__name__}: {e}. Field will be skipped.",
+                UserWarning,
+            )
 
     return new_model

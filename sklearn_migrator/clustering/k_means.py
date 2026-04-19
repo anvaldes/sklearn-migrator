@@ -25,7 +25,22 @@ all_features = [
     'precompute_distances'
 ]
 
-def serialize_k_means(model, version_in):
+def serialize_k_means(model: KMeans, version_in: str) -> dict:
+    """
+    Serialize a fitted KMeans into a JSON-compatible dictionary.
+
+    Parameters
+    ----------
+    model : KMeans
+        A fitted scikit-learn KMeans instance.
+    version_in : str
+        The sklearn version used to train the model (e.g. '1.2.0').
+
+    Returns
+    -------
+    dict
+        A dictionary containing all necessary data to reconstruct the model.
+    """
 
     metadata = {}
 
@@ -71,7 +86,23 @@ def serialize_k_means(model, version_in):
 
     return metadata
 
-def deserialize_k_means(data, version_out):
+def deserialize_k_means(data: dict, version_out: str) -> KMeans:
+    """
+    Reconstruct a KMeans from a serialized dictionary.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary produced by serialize_k_means.
+    version_out : str
+        The sklearn version of the target environment (e.g. '1.7.0').
+
+    Returns
+    -------
+    KMeans
+        A reconstructed scikit-learn KMeans instance.
+    """
+    
     version_in = data['version_sklearn_in']
     init_params = data['init_params']
 
