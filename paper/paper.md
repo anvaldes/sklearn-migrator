@@ -29,14 +29,15 @@ The migration proceeds in two stages. **Stage 1 (parity):** the library captures
 
 This submission supports **21 models** across supervised and unsupervised learning:
 
-- **Classification (7):** `DecisionTreeClassifier`, `RandomForestClassifier`,
-`GradientBoostingClassifier`, `LogisticRegression`, `KNeighborsClassifier`, `SVC`, `MLPClassifier`
-- **Regression (10):** `DecisionTreeRegressor`, `RandomForestRegressor`,
-`GradientBoostingRegressor`, `LinearRegression`, `Ridge`, `Lasso`, `KNeighborsRegressor`, `SVR`, `AdaBoostRegressor`, `MLPRegressor`
-- **Clustering (3):** `AgglomerativeClustering`, `KMeans`, `MiniBatchKMeans`
-- **Dimensionality reduction (1):** `PCA`
+| Category | # | Estimators |
+|---|---|---|
+| Classification | 7 | `DecisionTreeClassifier`, `RandomForestClassifier`, `GradientBoostingClassifier`, `LogisticRegression`, `KNeighborsClassifier`, `SVC`, `MLPClassifier` |
+| Regression | 10 | `DecisionTreeRegressor`, `RandomForestRegressor`, `GradientBoostingRegressor`, `LinearRegression`, `Ridge`, `Lasso`, `KNeighborsRegressor`, `SVR`, `AdaBoostRegressor`, `MLPRegressor` |
+| Clustering | 3 | `AgglomerativeClustering`, `KMeans`, `MiniBatchKMeans` |
+| Dimensionality Reduction | 1 | `PCA` |
+| **Total** | **21** | |
 
-`sklearn-migrator` has been validated across **32 scikit-learn versions** (`0.21.3 → 1.7.2`), covering **1,024 migration pairs**, with automated, environment-isolated testing and strict parity checks. Continuous integration, unit tests, and an MIT license support reproducibility and adoption in production MLOps workflows.
+`sklearn-migrator` has been validated across **32 scikit-learn versions** (`0.21.3 → 1.7.2`), covering **1,024 migration pairs**, with automated, environment-isolated testing and strict parity checks. Continuous integration runs on every push: unit tests across four Python versions (3.9–3.12), followed by the automated build of 64 isolated Docker images and 21,504 (21 models × 32 × 32 version pairs) environment-isolated integration executions, each validated against a strict parity threshold.
 
 # Statement of need
 
@@ -54,13 +55,13 @@ Model persistence and portability are longstanding challenges in applied machine
 
 Several alternative approaches partially address related concerns, but each has significant limitations:
 
-- **pickle/joblib**: the default persistence mechanism, but explicitly version-fragile [@sklearn_persistence].
-- **skops**: designed for secure model sharing, but does not address cross-version compatibility.
-- **sklearn-onnx**: converts models to ONNX for cross-runtime interoperability, but supports only a subset of estimators and introduces a dependency on the ONNX runtime [@parida2025exportformats].
-- **PMML**: a standard interchange format with broad tool support, but with limited estimator coverage and no guarantee of numerical parity.
-- **Re-training**: a common workaround, but often infeasible due to missing data, regulatory constraints, or computational cost.
+- **pickle/joblib**: the default scikit-learn persistence mechanism and the most widely used in practice, but explicitly documented as *not* guaranteeing cross-version compatibility [@sklearn_persistence]. A model serialized under one release may raise `AttributeError`, `ModuleNotFoundError`, or silently produce different predictions under another—with no warning to the user.
+- **skops**: designed to replace pickle for *secure* model sharing by avoiding arbitrary code execution on deserialization. However, it does not address cross-version compatibility: a `.skops` file is still tied to the scikit-learn version used at serialization time, and loading it under a different release is subject to the same attribute-level breakage as pickle.
+- **sklearn-onnx**: converts fitted estimators to the ONNX intermediate representation, enabling deployment across runtimes (e.g., `onnxruntime`, C++, Java). However, it covers only a subset of scikit-learn estimators, requires a non-trivial conversion step, introduces a dependency on the ONNX runtime, and does not guarantee numerical parity with the original scikit-learn predictions due to differences in floating-point arithmetic across backends [@parida2025exportformats].
+- **PMML**: a mature XML-based interchange standard with broad tooling support across platforms and languages. However, estimator coverage is limited, the format is verbose and difficult to inspect programmatically, and numerical parity with the original model is not guaranteed—particularly for ensemble methods and neural networks.
+- **Re-training**: the most common production workaround—simply refit the model on the target environment. This is often infeasible due to missing or proprietary training data, regulatory constraints that prohibit model changes, computational cost at scale, or the need to preserve a specific model artifact for audit or reproducibility purposes.
 
-Pinning old scikit-learn versions accumulates CVEs and security debt over time, exposing production systems to known vulnerabilities. This makes a migration tool particularly compelling in organizations where dependency upgrades are driven by security patching cycles.
+None of these alternatives directly addresses the version-fragility problem for native scikit-learn estimators in production. Pinning old scikit-learn versions accumulates CVEs and security debt over time, exposing production systems to known vulnerabilities. This makes a migration tool particularly compelling in organizations where dependency upgrades are driven by security patching cycles.
 
 `sklearn-migrator` addresses this gap by enabling native, Python-centric cross-version migration without re-training, runtime conversion, or version pinning—while maintaining full compatibility with the scikit-learn API.
 
@@ -102,9 +103,16 @@ The library restricts values to JSON-encodable primitives (numbers, strings, boo
 
 `sklearn-migrator` validates migrations through:
 
-- **Environment isolation** (e.g., containers) to ensure `version_in` and `version_out` represent real installations.
+- **Environment isolation**: 64 dedicated Docker images (32 source + 32 target
+  versions) are built and pushed to GHCR on every push, ensuring `version_in`
+  and `version_out` represent fully independent, real scikit-learn installations
+  with no dependency leakage.
+- **Automated threshold enforcement**: each of the 21,504 migration executions
+  (21 models × 32 × 32 version pairs) is validated automatically against
+  `max |y_in - y_out| ≤ 1e-2`; any failure blocks the pipeline.
+- **Multi-Python compatibility**: unit tests run in parallel across Python 3.9,
+  3.10, 3.11, and 3.12 on every push.
 - **Fixed synthetic datasets** for deterministic evaluation.
-- **Strict parity checks** comparing source and migrated predictions under a tolerance (e.g., `1e-2`).
 
 Each of the 21 supported models is tested with a specific parameter configuration, ranging from default instantiations (e.g., `LinearRegression()`, `RandomForestClassifier()`) to configurations with explicit parameters (e.g., `DecisionTreeClassifier(max_depth=4, random_state=42)`, `PCA(n_components=2, whiten=True, svd_solver='full')`). Exhaustive combinatorial testing is outside the current scope.
 
