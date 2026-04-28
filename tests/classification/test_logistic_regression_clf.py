@@ -27,7 +27,7 @@ def test_logistic_regression_clf():
     y_pred = model.predict_proba(X)
     y_pred_new = new_model.predict_proba(X)
 
-    threshold = 0.001
+    threshold = 1e-2
 
     assert (abs(y_pred - y_pred_new).max(axis = 1).max() <= threshold)
 

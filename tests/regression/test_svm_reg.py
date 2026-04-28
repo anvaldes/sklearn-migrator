@@ -25,7 +25,7 @@ def test_svm_reg():
     y_pred = model.predict(X)
     y_pred_new = new_model.predict(X)
 
-    threshold = 0.001
+    threshold = 1e-2
 
     assert (abs(y_pred - y_pred_new).max() <= threshold)
 

@@ -76,12 +76,18 @@ def serialize_adaboost_reg(model: AdaBoostRegressor, version_in: str) -> dict:
 
     try:
         metadata['n_features_in'] = int(model.n_features_in_)
-    except:
+    except (KeyError, AttributeError):
+        metadata['n_features_in'] = None
+    except Exception as e:
+        warnings.warn(f"Could not get field 'n_features_in_': {type(e).__name__}: {e}")
         metadata['n_features_in'] = None
 
     try:
         metadata['n_features'] = int(getattr(model, 'n_features_', metadata['n_features_in']))
-    except:
+    except (KeyError, AttributeError):
+        metadata['n_features'] = metadata['n_features_in']
+    except Exception as e:
+        warnings.warn(f"Could not get field 'n_features_': {type(e).__name__}: {e}")
         metadata['n_features'] = metadata['n_features_in']
 
     model_dict = model.__dict__

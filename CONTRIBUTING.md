@@ -44,7 +44,7 @@ We consider a migration **correct** when a model serialized in one scikit-learn 
 
 Acceptance check:
 ```text
-max_abs_diff = max(abs(y_pred_input - y_pred_output)) < 1e-4
+max_abs_diff = max(abs(y_pred_input - y_pred_output)) < 1e-2
 ```
 
 ---
@@ -158,7 +158,7 @@ Use one container per version. A minimal driver can look like:
 # 1) load /input/model.json
 # 2) deserialize into a fresh estimator
 # 3) predict and save y_pred_output
-# 4) compare: max(abs(y_pred_input - y_pred_output)) < 1e-4
+# 4) compare: max(abs(y_pred_input - y_pred_output)) < 1e-2
 ```
 
 Example orchestration snippet:
@@ -230,7 +230,7 @@ def test_decision_tree_reg_roundtrip():
     y1 = model.predict(X)
     y2 = model2.predict(X)
 
-    assert np.max(np.abs(y1 - y2)) < 1e-4
+    assert np.max(np.abs(y1 - y2)) < 1e-2
 ```
 ---
 

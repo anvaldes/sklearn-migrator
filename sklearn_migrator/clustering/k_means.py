@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from sklearn.cluster import KMeans
 
@@ -48,13 +49,17 @@ def serialize_k_means(model: KMeans, version_in: str) -> dict:
 
     try:
         del init_params['n_jobs']
-    except:
+    except (KeyError, AttributeError):
         pass
+    except Exception as e:
+        warnings.warn(f"Could not delete field 'n_jobs': {type(e).__name__}: {e}")
 
     try:
         del init_params['precompute_distances']
-    except:
+    except (KeyError, AttributeError):
         pass
+    except Exception as e:
+        warnings.warn(f"Could not delete field 'precompute_distances': {type(e).__name__}: {e}")
 
     metadata['init_params'] = init_params
 

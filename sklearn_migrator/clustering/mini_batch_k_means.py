@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from sklearn.cluster import MiniBatchKMeans
 
@@ -53,8 +54,10 @@ def serialize_mini_batch_kmeans(model: MiniBatchKMeans, version_in: str) -> dict
     for p in ['n_jobs', 'precompute_distances', 'algorithm', 'copy_x']:
         try:
             del init_params[p]
-        except:
+        except (KeyError, AttributeError):
             pass
+        except Exception as e:
+            warnings.warn(f"Could not delete field '{p}': {type(e).__name__}: {e}")
 
     metadata['init_params'] = init_params
 
