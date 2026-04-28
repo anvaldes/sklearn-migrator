@@ -62,8 +62,10 @@ def serialize_mlp_reg(model: MLPRegressor, version_in: str) -> dict:
     for d_v in del_var:
         try:
             del params[d_v]
-        except:
+        except (KeyError, AttributeError):
             pass
+        except Exception as e:
+            warnings.warn(f"Could not delete field '{d_v}': {type(e).__name__}: {e}")
 
     serialized_mlp = {
             'meta': 'mlp-regression',
