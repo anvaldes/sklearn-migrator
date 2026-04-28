@@ -48,13 +48,17 @@ def serialize_pca(model: PCA, version_in: str) -> dict:
 
     try:
         del init_params['n_oversamples']
-    except:
+    except (KeyError, AttributeError):
         pass
+    except Exception as e:
+        warnings.warn(f"Could not delete field 'n_oversamples': {type(e).__name__}: {e}")
 
     try:
         del init_params['power_iteration_normalizer']
-    except:
+    except (KeyError, AttributeError):
         pass
+    except Exception as e:
+        warnings.warn(f"Could not delete field 'power_iteration_normalizer': {type(e).__name__}: {e}")
 
     metadata['init_params'] = init_params
 

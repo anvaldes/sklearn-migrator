@@ -1,3 +1,4 @@
+import warnings
 import pandas as pd
 import numpy as np
 from sklearn.svm import SVR
@@ -131,13 +132,19 @@ def serialize_svr(model: SVR, version_in: str) -> dict:
 
     try:
         prob_A = model._probA.tolist()
-    except:
+    except (KeyError, AttributeError):
         prob_A = model.probA_.tolist()
-    
+    except Exception as e:
+        warnings.warn(f"Could not get field '_probA': {type(e).__name__}: {e}")
+        prob_A = None
+
     try:
         prob_B = model._probB.tolist()
-    except:
+    except (KeyError, AttributeError):
         prob_B = model.probB_.tolist()
+    except Exception as e:
+        warnings.warn(f"Could not get field '_probB': {type(e).__name__}: {e}")
+        prob_B = None
     
     metadata = {
         'meta': 'svr',

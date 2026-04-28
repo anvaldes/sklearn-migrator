@@ -248,13 +248,17 @@ def deserialize_gradient_boosting_clf(data: dict, version_out: str) -> GradientB
 
     try:
         new_model.n_features_ = n_features
-    except:
+    except (KeyError, AttributeError):
         pass
+    except Exception as e:
+        warnings.warn(f"Could not set field 'n_features_': {type(e).__name__}: {e}")
 
     try:
         new_model.n_features_in_ = n_features
-    except:
+    except (KeyError, AttributeError):
         pass
+    except Exception as e:
+        warnings.warn(f"Could not set field 'n_features_in_': {type(e).__name__}: {e}")
     
     if (version_tuple(version_out) >= version_tuple('0.21.3')) and (version_tuple(version_out) < version_tuple('1.1.0')):
         new_model.loss_ = get_loss_object(data['loss'])(data['dummy_clf']['n_classes_'])

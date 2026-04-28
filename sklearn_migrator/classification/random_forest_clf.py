@@ -145,37 +145,51 @@ def deserialize_random_forest_clf(data: dict, version_out: str) -> RandomForestC
 
     try:
         new_model.n_features_ = n_features
-    except:
+    except (KeyError, AttributeError):
         pass
+    except Exception as e:
+        warnings.warn(f"Could not set field 'n_features_': {type(e).__name__}: {e}")
 
     try:
         new_model.n_features_in_ = n_features
-    except:
+    except (KeyError, AttributeError):
         pass
+    except Exception as e:
+        warnings.warn(f"Could not set field 'n_features_in_': {type(e).__name__}: {e}")
 
     try:
         new_model.base_estimator = RandomForestClassifier()
-    except:
+    except (KeyError, AttributeError):
         pass
+    except Exception as e:
+        warnings.warn(f"Could not set field 'base_estimator': {type(e).__name__}: {e}")
 
     try:
         new_model.base_estimator_ = RandomForestClassifier()
-    except:
+    except (KeyError, AttributeError):
         pass
+    except Exception as e:
+        warnings.warn(f"Could not set field 'base_estimator_': {type(e).__name__}: {e}")
 
     try:
         new_model.estimator = RandomForestClassifier()
-    except:
+    except (KeyError, AttributeError):
         pass
+    except Exception as e:
+        warnings.warn(f"Could not set field 'estimator': {type(e).__name__}: {e}")
 
     try:
         new_model._estimator = RandomForestClassifier()
-    except:
+    except (KeyError, AttributeError):
         pass
+    except Exception as e:
+        warnings.warn(f"Could not set field '_estimator': {type(e).__name__}: {e}")
 
     try:
         new_model.estimator_ = RandomForestClassifier()
-    except:
+    except (KeyError, AttributeError):
         pass
+    except Exception as e:
+        warnings.warn(f"Could not set field 'estimator_': {type(e).__name__}: {e}")
 
     return new_model

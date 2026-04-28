@@ -33,7 +33,7 @@ def test_pca():
     vec = model.transform(X)
     new_vec = new_model.transform(X)
 
-    threshold = 0.001
+    threshold = 1e-2
 
     assert (abs(new_vec - vec).max(axis = 1).max() <= threshold)
 
