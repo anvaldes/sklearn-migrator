@@ -180,23 +180,24 @@ import json
 import sklearn
 import numpy as np
 import pandas as pd
-
+from sklearn.datasets import make_regression
+from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
-
 from sklearn_migrator.regression.random_forest_reg import serialize_random_forest_reg
 
 version_sklearn_in = sklearn.__version__
 
+X, y = make_regression(n_samples=200, n_features=10, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
 model = RandomForestRegressor()
 model.fit(X_train, y_train)
 
-# If you want to compare output from this model and the new model with its new version
 y_pred = pd.DataFrame(model.predict(X_test))
 y_pred.to_csv('y_pred.csv', index=False)
+pd.DataFrame(X_test).to_csv('X_test.csv', index=False)
 
 all_data = serialize_random_forest_reg(model, version_sklearn_in)
-
-# Save it
 
 def convert(o):
     if isinstance(o, (np.integer, np.int64)):
@@ -208,8 +209,10 @@ def convert(o):
     else:
         raise TypeError(f"Object of type {type(o).__name__} is not JSON serializable")
 
-with open("/input/model.json", "w") as f:
+with open("model.json", "w") as f:
     json.dump(all_data, f, default=convert)
+
+print(f"Serialized with sklearn version: {version_sklearn_in}")
 ```
 
 ### b. Deserialize the model
@@ -219,25 +222,27 @@ import json
 import sklearn
 import numpy as np
 import pandas as pd
-
 from sklearn.ensemble import RandomForestRegressor
-
 from sklearn_migrator.regression.random_forest_reg import deserialize_random_forest_reg
 
 version_sklearn_out = sklearn.__version__
 
-with open("/input/model.json", "r") as f:
+X_test = pd.read_csv('X_test.csv').values
+
+with open("model.json", "r") as f:
     all_data = json.load(f)
 
 new_model = deserialize_random_forest_reg(all_data, version_sklearn_out)
 
-# Now you have your model in this new version
+y_pred_new = new_model.predict(X_test)
+pd.DataFrame(y_pred_new).to_csv('y_pred_new.csv', index=False)
 
-# If you want to compare the outputs
-y_pred_new = pd.DataFrame(new_model.predict(X_test))
-y_pred_new.to_csv('y_pred_new.csv', index=False)
+y_pred = pd.read_csv('y_pred.csv').values.flatten()
+max_diff = abs(y_pred - y_pred_new).max()
 
-# Compare "y_pred.csv" with "y_pred_new.csv"
+print(f"Deserialized with sklearn version: {version_sklearn_out}")
+print(f"Max absolute difference: {max_diff}")
+print(f"Migration OK: {max_diff < 1e-2}")
 ```
 
 ## 2. Docker: Step by Step
@@ -365,134 +370,7 @@ ix. Finally you can find your migrated model in the folder `/output_model` and i
 
 ## 🧾 Function Signatures & Parameters
 
-Each model in `sklearn-migrator` provides a pair of functions:
-
-- `serialize_<model_name>(model, version_in)`  
-  Converts a trained scikit-learn model into a portable, version-agnostic dictionary.
-
-- `deserialize_<model_name>(data, version_out)`  
-  Reconstructs a scikit-learn model in a specific target version using the serialized dictionary.
-
-### 🧠 Classification Models
-
-```python
-from sklearn_migrator.classification.decision_tree_clf import (
-    serialize_decision_tree_clf,
-    deserialize_decision_tree_clf,
-)
-
-from sklearn_migrator.classification.gradient_boosting_clf import (
-    serialize_gradient_boosting_clf,
-    deserialize_gradient_boosting_clf,
-)
-
-from sklearn_migrator.classification.knn_clf import (
-    serialize_knn_clf,
-    deserialize_knn_clf,
-)
-
-from sklearn_migrator.classification.logistic_regression_clf import (
-    serialize_logistic_regression_clf,
-    deserialize_logistic_regression_clf,
-)
-
-from sklearn_migrator.classification.mlp_clf import (
-    serialize_mlp_clf,
-    deserialize_mlp_clf,
-)
-
-from sklearn_migrator.classification.random_forest_clf import (
-    serialize_random_forest_clf,
-    deserialize_random_forest_clf,
-)
-
-from sklearn_migrator.classification.svm_clf import (
-    serialize_svc,
-    deserialize_svc,
-)
-```
-
-### 🧮 Regression Models
-
-```python
-from sklearn_migrator.regression.adaboost_reg import (
-    serialize_adaboost_reg,
-    deserialize_adaboost_reg,
-)
-
-from sklearn_migrator.regression.decision_tree_reg import (
-    serialize_decision_tree_reg,
-    deserialize_decision_tree_reg,
-)
-
-from sklearn_migrator.regression.gradient_boosting_reg import (
-    serialize_gradient_boosting_reg,
-    deserialize_gradient_boosting_reg,
-)
-
-from sklearn_migrator.regression.knn_reg import (
-    serialize_knn_reg,
-    deserialize_knn_reg,
-)
-
-from sklearn_migrator.regression.lasso_reg import (
-    serialize_lasso_reg,
-    deserialize_lasso_reg,
-)
-
-from sklearn_migrator.regression.linear_regression_reg import (
-    serialize_linear_regression_reg,
-    deserialize_linear_regression_reg,
-)
-
-from sklearn_migrator.regression.mlp_reg import (
-    serialize_mlp_reg,
-    deserialize_mlp_reg,
-)
-
-from sklearn_migrator.regression.random_forest_reg import (
-    serialize_random_forest_reg,
-    deserialize_random_forest_reg,
-)
-
-from sklearn_migrator.regression.ridge_reg import (
-    serialize_ridge_reg,
-    deserialize_ridge_reg,
-)
-
-from sklearn_migrator.regression.svm_reg import (
-    serialize_svr,
-    deserialize_svr,
-)
-```
-
-### 🧩 Clustering Models
-
-```python
-from sklearn_migrator.clustering.agglomerative import (
-    serialize_agglomerative,
-    deserialize_agglomerative,
-)
-
-from sklearn_migrator.clustering.k_means import (
-    serialize_k_means,
-    deserialize_k_means,
-)
-
-from sklearn_migrator.clustering.mini_batch_k_means import (
-    serialize_mini_batch_kmeans,
-    deserialize_mini_batch_kmeans,
-)
-```
-
-### 📉 Dimensionality Reduction
-
-```python
-from sklearn_migrator.dimension.pca import (
-    serialize_pca,
-    deserialize_pca,
-)
-```
+For detailed API documentation, see [API.md](API.md).
 
 ---
 
