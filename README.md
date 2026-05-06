@@ -156,6 +156,12 @@ pip install sklearn-migrator
 
 ---
 
+## 📚 API Documentation
+
+For full API documentation covering all 21 models, function signatures, parameters, return types, and usage examples, see [API.md](API.md).
+
+---
+
 ## 💥 Use Cases
 
 * **Long-term model storage**: Store models in a future-proof format across teams and systems.
@@ -179,40 +185,20 @@ It is important to understand what version of scikit-learn you want to migrate f
 import json
 import sklearn
 import numpy as np
-import pandas as pd
 from sklearn.datasets import make_regression
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn_migrator.regression.random_forest_reg import serialize_random_forest_reg
 
-version_sklearn_in = sklearn.__version__
-
 X, y = make_regression(n_samples=200, n_features=10, random_state=42)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-model = RandomForestRegressor()
-model.fit(X_train, y_train)
-
-y_pred = pd.DataFrame(model.predict(X_test))
-y_pred.to_csv('y_pred.csv', index=False)
-pd.DataFrame(X_test).to_csv('X_test.csv', index=False)
-
-all_data = serialize_random_forest_reg(model, version_sklearn_in)
-
-def convert(o):
-    if isinstance(o, (np.integer, np.int64)):
-        return int(o)
-    elif isinstance(o, (np.floating, np.float64)):
-        return float(o)
-    elif isinstance(o, np.ndarray):
-        return o.tolist()
-    else:
-        raise TypeError(f"Object of type {type(o).__name__} is not JSON serializable")
+model = RandomForestRegressor().fit(X_train, y_train)
+predictions = model.predict(X_test)
+data = serialize_random_forest_reg(model, sklearn.__version__)
 
 with open("model.json", "w") as f:
-    json.dump(all_data, f, default=convert)
-
-print(f"Serialized with sklearn version: {version_sklearn_in}")
+    json.dump(data, f)
 ```
 
 ### b. Deserialize the model
@@ -220,29 +206,13 @@ print(f"Serialized with sklearn version: {version_sklearn_in}")
 ```python
 import json
 import sklearn
-import numpy as np
-import pandas as pd
-from sklearn.ensemble import RandomForestRegressor
 from sklearn_migrator.regression.random_forest_reg import deserialize_random_forest_reg
 
-version_sklearn_out = sklearn.__version__
+with open("model.json") as f:
+    data = json.load(f)
 
-X_test = pd.read_csv('X_test.csv').values
-
-with open("model.json", "r") as f:
-    all_data = json.load(f)
-
-new_model = deserialize_random_forest_reg(all_data, version_sklearn_out)
-
-y_pred_new = new_model.predict(X_test)
-pd.DataFrame(y_pred_new).to_csv('y_pred_new.csv', index=False)
-
-y_pred = pd.read_csv('y_pred.csv').values.flatten()
-max_diff = abs(y_pred - y_pred_new).max()
-
-print(f"Deserialized with sklearn version: {version_sklearn_out}")
-print(f"Max absolute difference: {max_diff}")
-print(f"Migration OK: {max_diff < 1e-2}")
+new_model = deserialize_random_forest_reg(data, sklearn.__version__)
+new_predictions = new_model.predict(X_test)
 ```
 
 ## 2. Docker: Step by Step
@@ -365,12 +335,6 @@ docker run --rm \
 ```
 
 ix. Finally you can find your migrated model in the folder `/output_model` and its name is `new_model.pkl`. This model is a scikit-learn model of version `1.7.0`.
-
----
-
-## 🧾 Function Signatures & Parameters
-
-For detailed API documentation, see [API.md](API.md).
 
 ---
 
