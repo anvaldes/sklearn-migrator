@@ -73,9 +73,7 @@ By enabling deterministic, cross-version migration, `sklearn-migrator` mitigates
 
 More broadly, this work promotes **transparent and inspectable model artifacts**, filling a significant gap in the machine learning ecosystem by providing a native, Python-centric path to model portability that complements existing interoperability standards.
 
-# AI Usage Disclosure
 
-Large language models were used to assist with minor grammar checking and phrasing improvements during manuscript preparation. All software design decisions, implementation, experiments, validation, and technical content were authored and verified by the submitting author.
 
 # Design and validation
 
@@ -168,6 +166,11 @@ Analogous functions exist for all covered estimators. In a true two-environment 
 - **Partial scikit-learn coverage.** Additional models (e.g., pipelines, transformers) are not yet supported but are planned for future releases. Community contributions are welcome.
 - **Parity tolerance depends on model family.** Some families may be sensitive to floating-point or solver differences across versions; tolerances can be adjusted depending on operational requirements.
 - **Parameter configuration coverage.** Each model is validated under a representative configuration. Exhaustive coverage of all parameter combinations and future breaking changes is outside the current scope.
+
+# AI Usage Disclosure
+
+Large language models were used to assist with minor grammar checking and phrasing improvements during manuscript preparation. All software design decisions, implementation, experiments, validation, and technical content were authored and verified by the submitting author.
+
 
 # Acknowledgements
 
