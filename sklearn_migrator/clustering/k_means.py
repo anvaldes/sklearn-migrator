@@ -1,6 +1,7 @@
 import warnings
 import numpy as np
 from sklearn.cluster import KMeans
+from ..utils import json_convert
 
 all_features = [
     'algorithm',
@@ -89,7 +90,7 @@ def serialize_k_means(model: KMeans, version_in: str) -> dict:
     metadata['other_params'] = other_params
     metadata['version_sklearn_in'] = version_in
 
-    return metadata
+    return json_convert(metadata)
 
 def deserialize_k_means(data: dict, version_out: str) -> KMeans:
     """

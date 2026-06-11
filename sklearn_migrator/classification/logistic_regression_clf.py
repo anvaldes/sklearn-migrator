@@ -1,6 +1,7 @@
 import warnings
 import numpy as np
 from sklearn.linear_model import LogisticRegression
+from ..utils import json_convert
 
 all_features = [
     'warm_start',
@@ -71,7 +72,7 @@ def serialize_logistic_regression_clf(model: LogisticRegression, version_in: str
 
     metadata['other_params'] = other_params
 
-    return metadata
+    return json_convert(metadata)
 
 def deserialize_logistic_regression_clf(data: dict, version_out: str) -> LogisticRegression:
     """

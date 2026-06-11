@@ -1,6 +1,7 @@
 import warnings
 import numpy as np
 from sklearn.linear_model import Ridge
+from ..utils import json_convert
 
 all_features = [ 
     'fit_intercept', 
@@ -57,7 +58,7 @@ def serialize_ridge_reg(model: Ridge, version_in: str) -> dict:
 
     metadata['other_params'] = other_params
 
-    return metadata
+    return json_convert(metadata)
 
 
 def deserialize_ridge_reg(data: dict, version_out: str) -> Ridge:

@@ -1,6 +1,7 @@
 import warnings
 import numpy as np
 from sklearn.linear_model import LinearRegression
+from ..utils import json_convert
 
 all_features = [ 
     'fit_intercept', 
@@ -61,7 +62,7 @@ def serialize_linear_regression_reg(model: LinearRegression, version_in: str) ->
 
     metadata['other_params'] = other_params
 
-    return metadata
+    return json_convert(metadata)
 
 
 def deserialize_linear_regression_reg(data: dict, version_out: str) -> LinearRegression:

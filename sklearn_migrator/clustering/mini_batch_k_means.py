@@ -1,6 +1,7 @@
 import warnings
 import numpy as np
 from sklearn.cluster import MiniBatchKMeans
+from ..utils import json_convert
 
 all_features = [
     'batch_size',
@@ -94,7 +95,7 @@ def serialize_mini_batch_kmeans(model: MiniBatchKMeans, version_in: str) -> dict
     metadata['other_params'] = other_params
     metadata['version_sklearn_in'] = version_in
 
-    return metadata
+    return json_convert(metadata)
 
 
 def deserialize_mini_batch_kmeans(data: dict, version_out: str) -> MiniBatchKMeans:

@@ -4,10 +4,9 @@ from sklearn.ensemble import GradientBoostingRegressor
 from .decision_tree_reg import serialize_decision_tree_reg
 from .decision_tree_reg import deserialize_decision_tree_reg
 from sklearn.dummy import DummyRegressor
+from ..utils import json_convert, version_tuple
 
 import sklearn
-
-version_sklearn = sklearn.__version__
 
 
 all_features = [
@@ -38,35 +37,6 @@ all_features = [
     'ccp_alpha',
     'n_trees_per_iteration_'
 ]
-
-
-def version_tuple(version: str) -> tuple:
-    """
-    Convert a version string into a comparable tuple of integers.
-
-    Parameters
-    ----------
-    version : str
-        Version string (e.g. '1.2.0').
-
-    Returns
-    -------
-    tuple
-        Tuple of integers (major, minor, patch).
-    """
-
-    version_split = version.split('.')
-
-    if len(version_split) == 1:
-        new_version = (int(version_split[0]), 0, 0)
-    elif len(version_split) == 2:
-        new_version = (int(version_split[0]), int(version_split[1]), 0)
-    elif len(version_split) == 3:
-        new_version = (int(version_split[0]), int(version_split[1]), int(version_split[2]))
-    else:
-        new_version = 'Formato no valido'
-
-    return new_version
 
 
 if version_tuple(sklearn.__version__) < version_tuple('1.4.0'):
@@ -200,7 +170,7 @@ def serialize_gradient_boosting_reg(model: GradientBoostingRegressor, version_in
     metadata['other_params'] = other_params
     metadata['version_sklearn_in'] = version_in
 
-    return metadata
+    return json_convert(metadata)
 
 
 def deserialize_gradient_boosting_reg(data: dict, version_out: str) -> GradientBoostingRegressor:

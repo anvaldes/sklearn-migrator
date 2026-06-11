@@ -1,6 +1,7 @@
 import warnings
 import numpy as np
 from sklearn.neural_network import MLPClassifier
+from ..utils import json_convert
 
 all_features = [
     'batch_size',
@@ -101,7 +102,7 @@ def serialize_mlp_clf(model: MLPClassifier, version_in: str) -> dict:
     metadata['other_params'] = other_params
     metadata['version_sklearn_in'] = version_in
 
-    return metadata
+    return json_convert(metadata)
 
 def deserialize_mlp_clf(data: dict, version_out: str) -> MLPClassifier:
     """
