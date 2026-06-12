@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.neighbors import KNeighborsRegressor
+from ..utils import json_convert
 
 all_features = [
     "_fit_X",
@@ -52,7 +53,7 @@ def serialize_knn_reg(model: KNeighborsRegressor, version_in: str) -> dict:
     metadata["other_params"] = other_params
     metadata["version_sklearn_in"] = version_in
 
-    return metadata
+    return json_convert(metadata)
 
 
 def deserialize_knn_reg(data: dict, version_out: str) -> KNeighborsRegressor:

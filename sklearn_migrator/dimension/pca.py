@@ -1,6 +1,7 @@
 import warnings
 import numpy as np
 from sklearn.decomposition import PCA
+from ..utils import json_convert
 
 all_features = [
     '_fit_svd_solver',
@@ -83,7 +84,7 @@ def serialize_pca(model: PCA, version_in: str) -> dict:
     metadata['other_params'] = other_params
     metadata['version_sklearn_in'] = version_in
 
-    return metadata
+    return json_convert(metadata)
 
 
 def deserialize_pca(data: dict, version_out: str) -> PCA:

@@ -2,6 +2,7 @@ import warnings
 import numpy as np
 from sklearn.tree._tree import Tree
 from sklearn.tree import DecisionTreeClassifier
+from ..utils import json_convert, version_tuple
 
 all_features = [
     'max_leaf_nodes',
@@ -24,36 +25,6 @@ all_features = [
     'feature_names_in_',
     'monotonic_cst'
 ]
-
-
-def version_tuple(version: str) -> tuple:
-
-    """
-    Convert a version string into a comparable tuple of integers.
-
-    Parameters
-    ----------
-    version : str
-        Version string (e.g. '1.2.0').
-
-    Returns
-    -------
-    tuple
-        Tuple of integers (major, minor, patch).
-    """
-
-    version_split = version.split('.')
-
-    if len(version_split) == 1:
-        new_version = (int(version_split[0]), 0, 0)
-    elif len(version_split) == 2:
-        new_version = (int(version_split[0]), int(version_split[1]), 0)
-    elif len(version_split) == 3:
-        new_version = (int(version_split[0]), int(version_split[1]), int(version_split[2]))
-    else:
-        new_version = 'Formato no valido'
-
-    return new_version
 
 
 def _get_extended_nodes(nodes: list, version_in: str) -> list:
@@ -207,7 +178,7 @@ def serialize_decision_tree_clf(model: DecisionTreeClassifier, version_in: str) 
 
     metadata['other_params'] = other_params
 
-    return metadata
+    return json_convert(metadata)
 
 def _build_tree_dtype(dtypes_dict: dict, version_out: str) -> tuple:
     """

@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.ensemble import AdaBoostRegressor
 from ..regression.decision_tree_reg import serialize_decision_tree_reg
 from ..regression.decision_tree_reg import deserialize_decision_tree_reg
+from ..utils import json_convert
 
 import sklearn
 
@@ -14,35 +15,6 @@ all_features = [
     'feature_names_in_',
     'n_features_'
 ]
-
-
-def version_tuple(version: str) -> tuple:
-    """
-    Convert a version string into a comparable tuple of integers.
-
-    Parameters
-    ----------
-    version : str
-        Version string (e.g. '1.2.0').
-
-    Returns
-    -------
-    tuple
-        Tuple of integers (major, minor, patch).
-    """
-
-    version_split = version.split('.')
-
-    if len(version_split) == 1:
-        new_version = (int(version_split[0]), 0, 0)
-    elif len(version_split) == 2:
-        new_version = (int(version_split[0]), int(version_split[1]), 0)
-    elif len(version_split) == 3:
-        new_version = (int(version_split[0]), int(version_split[1]), int(version_split[2]))
-    else:
-        new_version = 'Formato no valido'
-
-    return new_version
 
 
 def serialize_adaboost_reg(model: AdaBoostRegressor, version_in: str) -> dict:
@@ -110,7 +82,7 @@ def serialize_adaboost_reg(model: AdaBoostRegressor, version_in: str) -> dict:
     metadata['other_params'] = other_params
     metadata['version_sklearn_in'] = version_in
 
-    return metadata
+    return json_convert(metadata)
 
 
 def deserialize_adaboost_reg(data: dict, version_out: str) -> AdaBoostRegressor:

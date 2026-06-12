@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
+from ..utils import json_convert, version_tuple
 
 all_features = [
     'n_features_in_',
@@ -9,25 +10,6 @@ all_features = [
     'distances_',
     'feature_names_in_',
 ]
-
-def version_tuple(version: str) -> tuple:
-    """
-    Convert a version string into a comparable tuple of integers.
-
-    Parameters
-    ----------
-    version : str
-        Version string (e.g. '1.2.0').
-
-    Returns
-    -------
-    tuple
-        Tuple of integers (major, minor, patch).
-    """
-
-    parts = version.split(".")
-    parts = (parts + ["0", "0"])[:3]
-    return tuple(int(p) for p in parts)
 
 
 def serialize_agglomerative(model: AgglomerativeClustering, version_in: str) -> dict:
@@ -89,7 +71,7 @@ def serialize_agglomerative(model: AgglomerativeClustering, version_in: str) -> 
     metadata['other_params'] = other_params
     metadata['version_sklearn_in'] = version_in
 
-    return metadata
+    return json_convert(metadata)
 
 
 def deserialize_agglomerative(data: dict, version_out: str) -> AgglomerativeClustering:
