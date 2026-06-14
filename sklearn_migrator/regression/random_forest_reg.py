@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from .decision_tree_reg import serialize_decision_tree_reg
 from .decision_tree_reg import deserialize_decision_tree_reg
+from ..utils import json_convert
 
 all_features = [
     'n_estimators',
@@ -89,7 +90,7 @@ def serialize_random_forest_reg(model: RandomForestRegressor, version_in: str) -
     metadata['other_params'] = other_params
     metadata['version_sklearn_in'] = version_in
 
-    return metadata
+    return json_convert(metadata)
 
 
 def deserialize_random_forest_reg(data: dict, version_out: str) -> RandomForestRegressor:

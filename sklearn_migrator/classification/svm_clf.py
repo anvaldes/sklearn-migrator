@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.svm import SVC
+from ..utils import json_convert
 
 
 class Migrated_SVC:
@@ -223,7 +224,7 @@ def serialize_svc(model: SVC, version_in: str) -> dict:
         "probB": probB,
         "version_sklearn_in": version_in,
     }
-    return metadata
+    return json_convert(metadata)
 
 def deserialize_svc(data: dict, version_out: str) -> Migrated_SVC:
     """

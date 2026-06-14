@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from .decision_tree_clf import serialize_decision_tree_clf
 from .decision_tree_clf import deserialize_decision_tree_clf
+from ..utils import json_convert
 
 all_features = [
     'n_estimators',
@@ -91,7 +92,7 @@ def serialize_random_forest_clf(model: RandomForestClassifier, version_in: str) 
     metadata['other_params'] = other_params
     metadata['version_sklearn_in'] = version_in
 
-    return metadata
+    return json_convert(metadata)
 
 
 def deserialize_random_forest_clf(data: dict, version_out: str) -> RandomForestClassifier:

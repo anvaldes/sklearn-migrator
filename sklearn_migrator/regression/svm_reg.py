@@ -2,6 +2,7 @@ import warnings
 import pandas as pd
 import numpy as np
 from sklearn.svm import SVR
+from ..utils import json_convert
 
 class Migrated_SVR:
     """
@@ -162,7 +163,7 @@ def serialize_svr(model: SVR, version_in: str) -> dict:
         'version_sklearn_in': version_in
     }
 
-    return metadata
+    return json_convert(metadata)
 
 def deserialize_svr(data: dict, version_out: str) -> Migrated_SVR:
     """
