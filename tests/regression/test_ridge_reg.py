@@ -1,6 +1,5 @@
 from sklearn.linear_model import Ridge
-from sklearn_migrator.regression.ridge_reg import serialize_ridge_reg
-from sklearn_migrator.regression.ridge_reg import deserialize_ridge_reg
+from sklearn_migrator import serialize, deserialize
 import sklearn
 
 def test_ridge_reg():
@@ -11,8 +10,8 @@ def test_ridge_reg():
     model.fit(X, y)
 
     version = sklearn.__version__
-    result = serialize_ridge_reg(model, version_in=version)
-    new_model = deserialize_ridge_reg(result, version_out=version)
+    result = serialize(model, version_in=version)
+    new_model = deserialize(result, version_out=version)
 
     #--------------------------------------------------
 

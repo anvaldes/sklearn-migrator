@@ -1,8 +1,7 @@
 import sklearn
 import numpy as np
 from sklearn.cluster import KMeans
-from sklearn_migrator.clustering.k_means import serialize_k_means
-from sklearn_migrator.clustering.k_means import deserialize_k_means
+from sklearn_migrator import serialize, deserialize
 
 def test_clu_kmeans():
 
@@ -17,8 +16,8 @@ def test_clu_kmeans():
     model.fit(X)
 
     version = sklearn.__version__
-    result = serialize_k_means(model, version_in=version)
-    new_model = deserialize_k_means(result, version_out=version)
+    result = serialize(model, version_in=version)
+    new_model = deserialize(result, version_out=version)
 
     #--------------------------------------------------
 

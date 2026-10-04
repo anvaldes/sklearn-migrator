@@ -1,8 +1,7 @@
 import sklearn
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
-from sklearn_migrator.clustering.agglomerative import serialize_agglomerative
-from sklearn_migrator.clustering.agglomerative import deserialize_agglomerative
+from sklearn_migrator import serialize, deserialize
 
 def test_clu_agglomerative():
 
@@ -17,8 +16,8 @@ def test_clu_agglomerative():
     model.fit(X)
 
     version = sklearn.__version__
-    result = serialize_agglomerative(model, version_in=version)
-    new_model = deserialize_agglomerative(result, version_out=version)
+    result = serialize(model, version_in=version)
+    new_model = deserialize(result, version_out=version)
 
     #--------------------------------------------------
 

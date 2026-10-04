@@ -7,11 +7,9 @@ from joblib import load
 
 from sklearn.svm import SVR
 
-from sklearn_migrator.regression.svm_reg import deserialize_svr
+from sklearn_migrator import deserialize
 
 #--------------------------------------------------
-
-version_sklearn_out = sklearn.__version__
 
 #--------------------------------------------------
 
@@ -33,7 +31,7 @@ with open("/output/serialized_model.json", "r") as f:
 
 # 3. Deserialization
 
-deserialized_model = deserialize_svr(serialized_model, version_sklearn_out)
+deserialized_model = deserialize(serialized_model)
 
 #--------------------------------------------------
 
