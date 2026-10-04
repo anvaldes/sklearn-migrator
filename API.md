@@ -1,9 +1,13 @@
 # sklearn-migrator API Reference
 
 This document covers every public `serialize` and `deserialize` function in the library.
-The general pattern is always the same: call `serialize_<model>(model, version_in)` on the
-source environment, persist or transfer the resulting dictionary (e.g. as JSON), then call
-`deserialize_<model>(data, version_out)` on the target environment to recover a working model.
+The general pattern is always the same: call `serialize(model)` on the source environment,
+persist or transfer the resulting dictionary (e.g. as JSON), then call `deserialize(data)` on
+the target environment to recover a working model.
+
+`serialize` and `deserialize` work for every supported model: they identify the model and call
+the right model-specific function for you (see [Unified API](#unified-api)). The model-specific
+`serialize_<model>` / `deserialize_<model>` functions remain available and are documented below.
 
 Supported sklearn versions: **0.21.3 – 1.7.2**
 
@@ -11,6 +15,10 @@ Supported sklearn versions: **0.21.3 – 1.7.2**
 
 ## Table of Contents
 
+- [Unified API](#unified-api)
+  - [serialize](#serialize)
+  - [deserialize](#deserialize)
+  - [supported_models](#supported_models)
 - [Classification](#classification)
   - [Logistic Regression](#logistic-regression)
   - [Decision Tree Classifier](#decision-tree-classifier)
@@ -37,6 +45,142 @@ Supported sklearn versions: **0.21.3 – 1.7.2**
 - [Dimensionality Reduction](#dimensionality-reduction)
   - [PCA](#pca)
 - [Common Patterns](#common-patterns)
+
+---
+
+## Unified API
+
+```python
+from sklearn_migrator import serialize, deserialize, supported_models
+```
+
+These are the recommended entry points. You do not need to know which model-specific function
+matches your model.
+
+---
+
+#### `serialize`
+
+```python
+serialize(model, version_in: str = None) -> dict
+```
+
+Converts any supported fitted model into a JSON-compatible dictionary. The serializer is selected from the class of `model`, and the class name is stored in the dictionary under the `model_type` key so that `deserialize` can identify it later.
+
+**Parameters**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `model` | any supported model | A fitted scikit-learn model of one of the classes in the table below. |
+| `version_in` | `str`, optional | The sklearn version used to train the model (e.g. `'1.2.0'`). Defaults to the installed version, `sklearn.__version__`. |
+
+**Returns**
+
+| Type | Description |
+|------|-------------|
+| `dict` | The same JSON-serializable dictionary produced by the model-specific function, plus a `model_type` field (e.g. `'RandomForestClassifier'`). |
+
+**Raises**
+
+| Type | Description |
+|------|-------------|
+| `TypeError` | If `model` is not an instance of a supported scikit-learn class. The class must match exactly: subclasses and other estimators (e.g. `ExtraTreesClassifier`) are rejected. |
+
+**Example**
+
+```python
+import json
+from sklearn.ensemble import RandomForestClassifier
+from sklearn_migrator import serialize
+
+model = RandomForestClassifier().fit(X_train, y_train)
+data = serialize(model)
+
+with open("model.json", "w") as f:
+    json.dump(data, f)
+```
+
+---
+
+#### `deserialize`
+
+```python
+deserialize(data: dict, version_out: str = None, model_type: str = None)
+```
+
+Reconstructs a model from a serialized dictionary. The deserializer is selected from the `model_type` field of `data`.
+
+**Parameters**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `data` | `dict` | Dictionary produced by `serialize`. |
+| `version_out` | `str`, optional | The sklearn version of the target environment (e.g. `'1.7.0'`). Defaults to the installed version, `sklearn.__version__`. |
+| `model_type` | `str`, optional | Name of the scikit-learn class of the model (e.g. `'RandomForestClassifier'`). Only needed when `data` has no `model_type` field, i.e. it was produced by a model-specific `serialize_<model>` function or by a version of the library older than 1.0.0. |
+
+**Returns**
+
+| Type | Description |
+|------|-------------|
+| model | The reconstructed model, of the type returned by the matching model-specific function (see the table below). |
+
+**Raises**
+
+| Type | Description |
+|------|-------------|
+| `ValueError` | If the model type is neither stored in `data` nor passed as `model_type`, or if it is not supported. |
+
+**Example**
+
+```python
+import json
+from sklearn_migrator import deserialize
+
+with open("model.json") as f:
+    data = json.load(f)
+
+model = deserialize(data)
+predictions = model.predict(X_test)
+
+# Dictionary created with a model-specific function or an older version of the library
+model = deserialize(old_data, model_type="RandomForestClassifier")
+```
+
+---
+
+#### `supported_models`
+
+```python
+supported_models() -> list
+```
+
+Returns the sorted list of class names accepted by `serialize` and, as `model_type`, by `deserialize`.
+
+| `model_type` | Functions called | `deserialize` returns |
+|--------------|------------------|-----------------------|
+| `LogisticRegression` | [`serialize_logistic_regression_clf` / `deserialize_logistic_regression_clf`](#logistic-regression) | `LogisticRegression` |
+| `DecisionTreeClassifier` | [`serialize_decision_tree_clf` / `deserialize_decision_tree_clf`](#decision-tree-classifier) | `DecisionTreeClassifier` |
+| `RandomForestClassifier` | [`serialize_random_forest_clf` / `deserialize_random_forest_clf`](#random-forest-classifier) | `RandomForestClassifier` |
+| `GradientBoostingClassifier` | [`serialize_gradient_boosting_clf` / `deserialize_gradient_boosting_clf`](#gradient-boosting-classifier) | `GradientBoostingClassifier` |
+| `KNeighborsClassifier` | [`serialize_knn_clf` / `deserialize_knn_clf`](#k-nearest-neighbors-classifier) | `KNeighborsClassifier` |
+| `SVC` | [`serialize_svc` / `deserialize_svc`](#support-vector-classifier-svc) | `Migrated_SVC` |
+| `MLPClassifier` | [`serialize_mlp_clf` / `deserialize_mlp_clf`](#mlp-classifier) | `MLPClassifier` |
+| `LinearRegression` | [`serialize_linear_regression_reg` / `deserialize_linear_regression_reg`](#linear-regression) | `LinearRegression` |
+| `Ridge` | [`serialize_ridge_reg` / `deserialize_ridge_reg`](#ridge-regression) | `Ridge` |
+| `Lasso` | [`serialize_lasso_reg` / `deserialize_lasso_reg`](#lasso-regression) | `Lasso` |
+| `DecisionTreeRegressor` | [`serialize_decision_tree_reg` / `deserialize_decision_tree_reg`](#decision-tree-regressor) | `DecisionTreeRegressor` |
+| `RandomForestRegressor` | [`serialize_random_forest_reg` / `deserialize_random_forest_reg`](#random-forest-regressor) | `RandomForestRegressor` |
+| `GradientBoostingRegressor` | [`serialize_gradient_boosting_reg` / `deserialize_gradient_boosting_reg`](#gradient-boosting-regressor) | `GradientBoostingRegressor` |
+| `AdaBoostRegressor` | [`serialize_adaboost_reg` / `deserialize_adaboost_reg`](#adaboost-regressor) | `AdaBoostRegressor` |
+| `MLPRegressor` | [`serialize_mlp_reg` / `deserialize_mlp_reg`](#mlp-regressor) | `MLPRegressor` |
+| `SVR` | [`serialize_svr` / `deserialize_svr`](#support-vector-regressor-svr) | `Migrated_SVR` |
+| `KNeighborsRegressor` | [`serialize_knn_reg` / `deserialize_knn_reg`](#k-nearest-neighbors-regressor) | `KNeighborsRegressor` |
+| `KMeans` | [`serialize_k_means` / `deserialize_k_means`](#kmeans) | `KMeans` |
+| `MiniBatchKMeans` | [`serialize_mini_batch_kmeans` / `deserialize_mini_batch_kmeans`](#minibatchkmeans) | `MiniBatchKMeans` |
+| `AgglomerativeClustering` | [`serialize_agglomerative` / `deserialize_agglomerative`](#agglomerative-clustering) | `AgglomerativeClustering` |
+| `PCA` | [`serialize_pca` / `deserialize_pca`](#pca) | `PCA` |
+
+The per-model notes in the sections below (for example, the limitations of `Migrated_SVC` and `Migrated_SVR`) also apply when the model goes through `serialize` / `deserialize`.
 
 ---
 
@@ -1720,26 +1864,39 @@ The standard workflow is identical for every model: serialize on the source mach
 ```python
 # --- Source environment (e.g. sklearn 0.24.1) ---
 import json
-import sklearn
 from sklearn.ensemble import RandomForestClassifier
-from sklearn_migrator.classification.random_forest_clf import serialize_random_forest_clf
+from sklearn_migrator import serialize
 
 model = RandomForestClassifier(n_estimators=100, random_state=42).fit(X_train, y_train)
-data = serialize_random_forest_clf(model, sklearn.__version__)
+data = serialize(model)
 
 with open("model.json", "w") as f:
     json.dump(data, f)
 
 # --- Target environment (e.g. sklearn 1.7.0) ---
 import json
-import sklearn
-from sklearn_migrator.classification.random_forest_clf import deserialize_random_forest_clf
+from sklearn_migrator import deserialize
 
 with open("model.json") as f:
     data = json.load(f)
 
-model = deserialize_random_forest_clf(data, sklearn.__version__)
+model = deserialize(data)
 predictions = model.predict(X_test)
+```
+
+### Using the model-specific functions
+
+Each model can also be migrated with its own pair of functions, which take the sklearn version explicitly. Their dictionaries have no `model_type` field, so deserialize them with the matching `deserialize_<model>` function or with `deserialize(data, model_type=...)`.
+
+```python
+import sklearn
+from sklearn_migrator.classification.random_forest_clf import (
+    serialize_random_forest_clf,
+    deserialize_random_forest_clf,
+)
+
+data = serialize_random_forest_clf(model, sklearn.__version__)
+model = deserialize_random_forest_clf(data, sklearn.__version__)
 ```
 
 ### Warnings about incompatible fields

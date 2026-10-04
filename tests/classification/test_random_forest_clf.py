@@ -1,6 +1,5 @@
 from sklearn.ensemble import RandomForestClassifier
-from sklearn_migrator.classification.random_forest_clf import serialize_random_forest_clf
-from sklearn_migrator.classification.random_forest_clf import deserialize_random_forest_clf
+from sklearn_migrator import serialize, deserialize
 import sklearn
 
 def test_random_forest_clf():
@@ -11,8 +10,8 @@ def test_random_forest_clf():
     model.fit(X, y)
 
     version = sklearn.__version__
-    result = serialize_random_forest_clf(model, version_in=version)
-    new_model = deserialize_random_forest_clf(result, version_out=version)
+    result = serialize(model, version_in=version)
+    new_model = deserialize(result, version_out=version)
 
     #--------------------------------------------------
 

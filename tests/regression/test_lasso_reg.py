@@ -1,6 +1,5 @@
 from sklearn.linear_model import Lasso
-from sklearn_migrator.regression.lasso_reg import serialize_lasso_reg
-from sklearn_migrator.regression.lasso_reg import deserialize_lasso_reg
+from sklearn_migrator import serialize, deserialize
 import sklearn
 
 def test_lasso_reg():
@@ -11,8 +10,8 @@ def test_lasso_reg():
     model.fit(X, y)
 
     version = sklearn.__version__
-    result = serialize_lasso_reg(model, version_in=version)
-    new_model = deserialize_lasso_reg(result, version_out=version)
+    result = serialize(model, version_in=version)
+    new_model = deserialize(result, version_out=version)
 
     #--------------------------------------------------
 

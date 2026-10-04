@@ -1,8 +1,7 @@
 import sklearn
 import numpy as np
 from sklearn.cluster import MiniBatchKMeans
-from sklearn_migrator.clustering.mini_batch_k_means import serialize_mini_batch_kmeans
-from sklearn_migrator.clustering.mini_batch_k_means import deserialize_mini_batch_kmeans
+from sklearn_migrator import serialize, deserialize
 
 def test_clu_mbkmeans():
 
@@ -17,8 +16,8 @@ def test_clu_mbkmeans():
     model.fit(X)
 
     version = sklearn.__version__
-    result = serialize_mini_batch_kmeans(model, version_in=version)
-    new_model = deserialize_mini_batch_kmeans(result, version_out=version)
+    result = serialize(model, version_in=version)
+    new_model = deserialize(result, version_out=version)
 
     #--------------------------------------------------
 

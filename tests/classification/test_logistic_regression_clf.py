@@ -1,6 +1,5 @@
 from sklearn.linear_model import LogisticRegression
-from sklearn_migrator.classification.logistic_regression_clf import serialize_logistic_regression_clf
-from sklearn_migrator.classification.logistic_regression_clf import deserialize_logistic_regression_clf
+from sklearn_migrator import serialize, deserialize
 import sklearn
 
 def test_logistic_regression_clf():
@@ -11,8 +10,8 @@ def test_logistic_regression_clf():
     model.fit(X, y)
 
     version = sklearn.__version__
-    result = serialize_logistic_regression_clf(model, version_in=version)
-    new_model = deserialize_logistic_regression_clf(result, version_out=version)
+    result = serialize(model, version_in=version)
+    new_model = deserialize(result, version_out=version)
 
     #--------------------------------------------------
 

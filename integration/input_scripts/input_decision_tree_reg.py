@@ -7,11 +7,9 @@ from joblib import load
 
 from sklearn.tree import DecisionTreeRegressor
 
-from sklearn_migrator.regression.decision_tree_reg import serialize_decision_tree_reg
+from sklearn_migrator import serialize
 
 #--------------------------------------------------
-
-version_sklearn_in = sklearn.__version__
 
 #--------------------------------------------------
 
@@ -59,7 +57,7 @@ y_pred.to_csv('/input/y_pred_input.csv', index = False)
 
 # 5. Save model
 
-serialized_model = serialize_decision_tree_reg(model, version_sklearn_in)
+serialized_model = serialize(model)
 
 with open("/input/serialized_model.json", "w") as f:
     json.dump(serialized_model, f, default=convert)
