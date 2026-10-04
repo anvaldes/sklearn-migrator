@@ -1,6 +1,5 @@
 from sklearn.tree import DecisionTreeClassifier
-from sklearn_migrator.classification.decision_tree_clf import serialize_decision_tree_clf
-from sklearn_migrator.classification.decision_tree_clf import deserialize_decision_tree_clf
+from sklearn_migrator import serialize, deserialize
 import sklearn
 
 def test_decision_tree_clf():
@@ -11,8 +10,8 @@ def test_decision_tree_clf():
     model.fit(X, y)
 
     version = sklearn.__version__
-    result = serialize_decision_tree_clf(model, version_in=version)
-    new_model = deserialize_decision_tree_clf(result, version_out=version)
+    result = serialize(model, version_in=version)
+    new_model = deserialize(result, version_out=version)
 
     #--------------------------------------------------
 

@@ -1,6 +1,5 @@
 from sklearn.linear_model import LinearRegression
-from sklearn_migrator.regression.linear_regression_reg import serialize_linear_regression_reg
-from sklearn_migrator.regression.linear_regression_reg import deserialize_linear_regression_reg
+from sklearn_migrator import serialize, deserialize
 import sklearn
 
 def test_linear_regression_reg():
@@ -11,8 +10,8 @@ def test_linear_regression_reg():
     model.fit(X, y)
 
     version = sklearn.__version__
-    result = serialize_linear_regression_reg(model, version_in=version)
-    new_model = deserialize_linear_regression_reg(result, version_out=version)
+    result = serialize(model, version_in=version)
+    new_model = deserialize(result, version_out=version)
 
     #--------------------------------------------------
 

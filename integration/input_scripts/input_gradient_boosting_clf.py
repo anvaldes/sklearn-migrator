@@ -3,9 +3,7 @@ import sklearn
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import GradientBoostingClassifier
-from sklearn_migrator.classification.gradient_boosting_clf import serialize_gradient_boosting_clf
-
-version_sklearn_in = sklearn.__version__
+from sklearn_migrator import serialize
 
 def convert(o):
     if isinstance(o, (np.integer, np.int64)):
@@ -27,6 +25,6 @@ model.fit(X_train_clf, y_train_clf)
 y_pred = pd.DataFrame(model.predict_proba(X_test_clf))
 y_pred.to_csv('/input/y_pred_input.csv', index=False)
 
-serialized_model = serialize_gradient_boosting_clf(model, version_sklearn_in)
+serialized_model = serialize(model)
 with open("/input/serialized_model.json", "w") as f:
     json.dump(serialized_model, f, default=convert)

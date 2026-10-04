@@ -1,8 +1,7 @@
 import sklearn
 import numpy as np
 from sklearn.decomposition import PCA
-from sklearn_migrator.dimension.pca import serialize_pca
-from sklearn_migrator.dimension.pca import deserialize_pca
+from sklearn_migrator import serialize, deserialize
 
 def test_pca():
 
@@ -17,8 +16,8 @@ def test_pca():
     model.fit(X)
 
     version = sklearn.__version__
-    result = serialize_pca(model, version_in=version)
-    new_model = deserialize_pca(result, version_out=version)
+    result = serialize(model, version_in=version)
+    new_model = deserialize(result, version_out=version)
 
     #--------------------------------------------------
 

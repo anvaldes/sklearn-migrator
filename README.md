@@ -38,6 +38,7 @@ However:
 
 # ✅ What `sklearn-migrator` provides
 
+### ✔ One `serialize` / `deserialize` pair for every model — the library detects the model for you  
 ### ✔ Serialize any supported model into a **JSON-compatible dictionary**  
 ### ✔ Deserialize and reconstruct the model **in a different scikit-learn version**  
 ### ✔ Remove dependency on pickle/joblib for long-term storage  
@@ -156,9 +157,24 @@ pip install sklearn-migrator
 
 ---
 
+## ⚡ Quick Start
+
+Two functions cover all 21 models. You don't need to know which serializer matches your model: `serialize` detects it from the model itself, and `deserialize` reads it from the serialized dictionary.
+
+```python
+from sklearn_migrator import serialize, deserialize
+
+data = serialize(model)        # in the source environment -> JSON-compatible dict
+new_model = deserialize(data)  # in the target environment -> model for the installed scikit-learn
+```
+
+Both functions use the installed scikit-learn version by default. You can list the supported models with `supported_models()`.
+
+---
+
 ## 📚 API Documentation
 
-For full API documentation covering all 21 models, function signatures, parameters, return types, and usage examples, see [API.md](API.md).
+For full API documentation covering `serialize`, `deserialize`, all 21 models, parameters, return types, and usage examples, see [API.md](API.md).
 
 ---
 
@@ -183,19 +199,17 @@ It is important to understand what version of scikit-learn you want to migrate f
 
 ```python
 import json
-import sklearn
-import numpy as np
 from sklearn.datasets import make_regression
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
-from sklearn_migrator.regression.random_forest_reg import serialize_random_forest_reg
+from sklearn_migrator import serialize
 
 X, y = make_regression(n_samples=200, n_features=10, random_state=42)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 model = RandomForestRegressor().fit(X_train, y_train)
 predictions = model.predict(X_test)
-data = serialize_random_forest_reg(model, sklearn.__version__)
+data = serialize(model)
 
 with open("model.json", "w") as f:
     json.dump(data, f)
@@ -205,13 +219,12 @@ with open("model.json", "w") as f:
 
 ```python
 import json
-import sklearn
-from sklearn_migrator.regression.random_forest_reg import deserialize_random_forest_reg
+from sklearn_migrator import deserialize
 
 with open("model.json") as f:
     data = json.load(f)
 
-new_model = deserialize_random_forest_reg(data, sklearn.__version__)
+new_model = deserialize(data)
 new_predictions = new_model.predict(X_test)
 ```
 
@@ -245,34 +258,18 @@ iv. Now you create your `input.py`:
 
 ```python
 import json
-import joblib
-import sklearn
 import numpy as np
 import pandas as pd
 from joblib import load
 
-from sklearn.ensemble import RandomForestClassifier
-
-from sklearn_migrator.classification.random_forest_clf import serialize_random_forest_clf
-
-version_sklearn_in = sklearn.__version__
+from sklearn_migrator import serialize
 
 model = load('model.pkl')
 
-all_data = serialize_random_forest_clf(model, version_sklearn_in)
-
-def convert(o):
-    if isinstance(o, (np.integer, np.int64)):
-        return int(o)
-    elif isinstance(o, (np.floating, np.float64)):
-        return float(o)
-    elif isinstance(o, np.ndarray):
-        return o.tolist()
-    else:
-        raise TypeError(f"Object of type {type(o).__name__} is not JSON serializable")
+all_data = serialize(model)
 
 with open("input_model/all_data.json", "w") as f:
-    json.dump(all_data, f, default=convert)
+    json.dump(all_data, f)
 
 fake_row = np.array([[0.5, -1.2, 0.3, 1.1, -0.7, 0.9, 0.0, -0.3, 1.5, 0.2]])
 
@@ -285,21 +282,15 @@ v. Now you create your `output.py`:
 ```python
 import json
 import joblib
-import sklearn
 import numpy as np
 import pandas as pd
-from joblib import load
 
-from sklearn.ensemble import RandomForestClassifier
-
-from sklearn_migrator.classification.random_forest_clf import deserialize_random_forest_clf
-
-version_sklearn_out = sklearn.__version__
+from sklearn_migrator import deserialize
 
 with open("input_model/all_data.json", "r") as f:
     all_data = json.load(f)
 
-new_model = deserialize_random_forest_clf(all_data, version_sklearn_out)
+new_model = deserialize(all_data)
 
 joblib.dump(new_model, 'output_model/new_model.pkl')
 

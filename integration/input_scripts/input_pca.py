@@ -3,9 +3,7 @@ import sklearn
 import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
-from sklearn_migrator.dimension.pca import serialize_pca
-
-version_sklearn_in = sklearn.__version__
+from sklearn_migrator import serialize
 
 def convert(o):
     if isinstance(o, (np.integer, np.int64)):
@@ -25,6 +23,6 @@ model.fit(X_dim)
 y_pred = pd.DataFrame(model.transform(X_dim))
 y_pred.to_csv('/input/y_pred_input.csv', index=False)
 
-serialized_model = serialize_pca(model, version_sklearn_in)
+serialized_model = serialize(model)
 with open("/input/serialized_model.json", "w") as f:
     json.dump(serialized_model, f, default=convert)

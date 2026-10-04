@@ -1,6 +1,5 @@
 from sklearn.ensemble import RandomForestRegressor
-from sklearn_migrator.regression.random_forest_reg import serialize_random_forest_reg
-from sklearn_migrator.regression.random_forest_reg import deserialize_random_forest_reg
+from sklearn_migrator import serialize, deserialize
 import sklearn
 
 def test_random_forest_reg():
@@ -11,8 +10,8 @@ def test_random_forest_reg():
     model.fit(X, y)
 
     version = sklearn.__version__
-    result = serialize_random_forest_reg(model, version_in=version)
-    new_model = deserialize_random_forest_reg(result, version_out=version)
+    result = serialize(model, version_in=version)
+    new_model = deserialize(result, version_out=version)
 
     #--------------------------------------------------
 

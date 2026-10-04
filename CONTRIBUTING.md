@@ -27,6 +27,7 @@ pre-commit run -a
 **Project Layout**
 ```
 sklearn_migrator/
+  core.py                 # serialize / deserialize + model registry
   classification/
     <estimator>_clf.py
   regression/
@@ -201,6 +202,16 @@ Follow the existing structure:
   - `tests/regression/test_decision_tree_reg.py`
   - `tests/classification/test_decision_tree_clf.py`
 
+### 6) Register the Estimator
+
+Users call the unified `serialize(model)` / `deserialize(data)` functions, which look the model up in `_REGISTRY` in `sklearn_migrator/core.py`. Add one entry mapping the scikit-learn class name to your module and functions:
+
+```python
+'DecisionTreeRegressor': ('regression.decision_tree_reg', 'serialize_decision_tree_reg', 'deserialize_decision_tree_reg'),
+```
+
+Then add the model to `MODELS` in `tests/test_core.py` (a test fails if a registered model is missing there), and to the model tables in `README.md` and `API.md`. For the cross-version CI run, add `integration/input_scripts/input_<model>.py`, `integration/output_scripts/output_<model>.py`, `integration/scripts/run_<model>.py` and the model name to the `integration-tests` matrix in `.github/workflows/tests.yml`.
+
 Browse existing implementations for guidance:  
 - **https://github.com/anvaldes/sklearn-migrator/tree/dev/sklearn_migrator**  
 - **https://github.com/anvaldes/sklearn-migrator/tree/dev/tests**
@@ -217,7 +228,7 @@ Minimal example:
 ```python
 import numpy as np
 from sklearn.tree import DecisionTreeRegressor
-from sklearn_migrator.regression.decision_tree_reg import serialize, deserialize
+from sklearn_migrator import serialize, deserialize
 
 def test_decision_tree_reg_roundtrip():
     X = np.array([[0.0],[1.0],[2.0]], dtype=float)
@@ -259,6 +270,7 @@ pre-commit run -a
 ## Pull Request Checklist
 
 - [ ] Code implements serializer/deserializer following the version-aware strategy.
+- [ ] New estimators are registered in `sklearn_migrator/core.py` and covered in `tests/test_core.py`.
 - [ ] Tests added/updated (`tests/...`) and pass locally (`pytest`).
 - [ ] Cross-version parity validated (provide a short summary in the PR).
 - [ ] Lint/format clean (ruff/black or `pre-commit run -a`).
