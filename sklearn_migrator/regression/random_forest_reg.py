@@ -1,9 +1,8 @@
-import warnings
-import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from .decision_tree_reg import serialize_decision_tree_reg
 from .decision_tree_reg import deserialize_decision_tree_reg
-from ..utils import json_convert
+from .._forest import _serialize_forest, _deserialize_forest
+from ..utils import set_attr_safely
 
 all_features = [
     'n_estimators',
@@ -29,6 +28,7 @@ all_features = [
     'monotonic_cst',
 ]
 
+
 def serialize_random_forest_reg(model: RandomForestRegressor, version_in: str) -> dict:
     """
     Serialize a fitted RandomForestRegressor into a JSON-compatible dictionary.
@@ -46,51 +46,7 @@ def serialize_random_forest_reg(model: RandomForestRegressor, version_in: str) -
         A dictionary containing all necessary data to reconstruct the model.
     """
 
-    estimators = model.estimators_
-    estimators_ser = [serialize_decision_tree_reg(e, version_in) for e in estimators]
-    params = model.get_params()
-
-    metadata = {}
-
-    metadata['estimators'] = estimators_ser
-    metadata['params'] = params
-    metadata['estimator_params'] = model.estimator_params
-
-    model_dict = model.__dict__
-    model_dict_keys = list(model_dict.keys())
-
-    default_values = {
-        'min_impurity_split': None,
-        'max_samples': None,
-        'ccp_alpha': 0.0,
-        'feature_names_in_': None,
-        'monotonic_cst': None
-    }
-
-    kdv = list(default_values.keys())
-
-    other_params = {}
-
-    for af in all_features:
-        if (af in model_dict_keys) == False:
-            other_params[af] = default_values[af]
-        else:
-            other_params[af] = model_dict[af]
-
-    try:
-        other_params['n_features'] = model.n_features_
-    except:
-        other_params['n_features'] = None
-
-    try:
-        other_params['n_features_in'] = model.n_features_in_
-    except:
-        other_params['n_features_in'] = None
-
-    metadata['other_params'] = other_params
-    metadata['version_sklearn_in'] = version_in
-
-    return json_convert(metadata)
+    return _serialize_forest(model, version_in, serialize_decision_tree_reg, all_features)
 
 
 def deserialize_random_forest_reg(data: dict, version_out: str) -> RandomForestRegressor:
@@ -110,71 +66,11 @@ def deserialize_random_forest_reg(data: dict, version_out: str) -> RandomForestR
         A reconstructed scikit-learn RandomForestRegressor instance.
     """
 
-    pre_model = RandomForestRegressor()
-    pre_get_params = list(pre_model.get_params().keys())
+    new_model, n_features = _deserialize_forest(
+        RandomForestRegressor, data, version_out, deserialize_decision_tree_reg, all_features
+    )
 
-    get_params = {}
-
-    for param in pre_get_params:
-        if param in list(data['params'].keys()):
-            get_params[param] = data['params'][param]
-
-    new_model = RandomForestRegressor(**get_params)
-
-    estimators = [deserialize_decision_tree_reg(e, version_out) for e in data['estimators']]
-
-    new_model.estimators_ = estimators
-    new_model.estimator_params = data['estimator_params']
-
-    for af in all_features:
-        try:
-            new_model.__dict__[af] = data['other_params'][af]
-        except KeyError:
-            pass  # field not present in this sklearn version
-        except AttributeError:
-            pass  # attribute not settable in this sklearn version
-        except Exception as e:
-            warnings.warn(
-                f"Could not set field '{af}' on {type(new_model).__name__}: "
-                f"{type(e).__name__}: {e}. Field will be skipped.",
-                UserWarning,
-            )
-
-    n_features = (data['other_params']['n_features'] or data['other_params']['n_features_in'])
-
-    try:
-        new_model.n_features_ = n_features
-    except:
-        pass
-
-    try:
-        new_model.n_features_in_ = n_features
-    except:
-        pass
-
-    try:
-        new_model.base_estimator = DecisionTreeRegressor()
-    except:
-        pass
-
-    try:
-        new_model.base_estimator_ = DecisionTreeRegressor()
-    except:
-        pass
-
-    try:
-        new_model.estimator = DecisionTreeRegressor()
-    except:
-        pass
-
-    try:
-        new_model._estimator = DecisionTreeRegressor()
-    except:
-        pass
-
-    try:
-        new_model.estimator_ = DecisionTreeRegressor()
-    except:
-        pass
+    set_attr_safely(new_model, 'n_features_', n_features)
+    set_attr_safely(new_model, 'n_features_in_', n_features)
 
     return new_model

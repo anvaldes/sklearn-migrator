@@ -1,16 +1,7 @@
-import warnings
-import numpy as np
 from sklearn.linear_model import Ridge
-from ..utils import json_convert
+from ._linear import all_features  # noqa: F401
+from ._linear import _serialize_penalized_linear, _deserialize_penalized_linear
 
-all_features = [ 
-    'fit_intercept', 
-    'copy_X',
-    'n_features_in_',
-    'feature_names_in_',
-    'tol',
-    'n_iter_'
-]
 
 def serialize_ridge_reg(model: Ridge, version_in: str) -> dict:
     """
@@ -29,36 +20,7 @@ def serialize_ridge_reg(model: Ridge, version_in: str) -> dict:
         A dictionary containing all necessary data to reconstruct the model.
     """
 
-    metadata = {
-        'alpha': model.alpha,
-        'coef_': model.coef_.tolist(),
-        'intercept_': model.intercept_.tolist(),
-        'version_sklearn_in': version_in
-    }
-
-    model_dict = model.__dict__
-    model_dict_keys = list(model_dict.keys())
-
-    default_values = {
-        'n_features_in_': len(model.coef_) if model.coef_.ndim == 1 else len(model.coef_[0]),
-        'feature_names_in_': None,
-        'tol': 1e-6,
-        'n_iter_': 1
-        }
-    
-    kdv = list(default_values.keys())
-
-    other_params = {}
-
-    for af in all_features:
-        if (af in model_dict_keys) == False:
-            other_params[af] = default_values[af]
-        else:
-            other_params[af] = model_dict[af]
-
-    metadata['other_params'] = other_params
-
-    return json_convert(metadata)
+    return _serialize_penalized_linear(model, version_in)
 
 
 def deserialize_ridge_reg(data: dict, version_out: str) -> Ridge:
@@ -78,24 +40,4 @@ def deserialize_ridge_reg(data: dict, version_out: str) -> Ridge:
         A reconstructed scikit-learn Ridge instance.
     """
 
-    model = Ridge()
-
-    model.alpha = data['alpha']
-    model.coef_ = np.array(data['coef_'])
-    model.intercept_ = np.array(data['intercept_'])
-
-    for af in all_features:
-        try:
-            model.__dict__[af] = data['other_params'][af]
-        except KeyError:
-            pass  # field not present in this sklearn version
-        except AttributeError:
-            pass  # attribute not settable in this sklearn version
-        except Exception as e:
-            warnings.warn(
-                f"Could not set field '{af}' on {type(model).__name__}: "
-                f"{type(e).__name__}: {e}. Field will be skipped.",
-                UserWarning,
-            )
-
-    return model
+    return _deserialize_penalized_linear(Ridge, data)

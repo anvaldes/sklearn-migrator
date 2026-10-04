@@ -1,28 +1,27 @@
-import warnings
 import numpy as np
 from sklearn.cluster import KMeans
-from ..utils import json_convert
+from ..utils import json_convert, collect_other_params
 
 all_features = [
     'algorithm',
     'cluster_centers_',
-    'copy_x', 
+    'copy_x',
     'inertia_',
     'init',
     'labels_',
     'max_iter',
     'n_clusters',
-    'n_init', 
+    'n_init',
     'n_iter_',
     'tol',
     'verbose',
     '_algorithm',
-    '_n_features_out', 
+    '_n_features_out',
     '_n_init',
     '_n_threads',
-    '_tol', 
-    'feature_names_in_', 
-    'n_features_in_', 
+    '_tol',
+    'feature_names_in_',
+    'n_features_in_',
     'n_jobs',
     'precompute_distances'
 ]
@@ -48,24 +47,10 @@ def serialize_k_means(model: KMeans, version_in: str) -> dict:
 
     init_params = model.get_params()
 
-    try:
-        del init_params['n_jobs']
-    except (KeyError, AttributeError):
-        pass
-    except Exception as e:
-        warnings.warn(f"Could not delete field 'n_jobs': {type(e).__name__}: {e}")
-
-    try:
-        del init_params['precompute_distances']
-    except (KeyError, AttributeError):
-        pass
-    except Exception as e:
-        warnings.warn(f"Could not delete field 'precompute_distances': {type(e).__name__}: {e}")
+    for p in ['n_jobs', 'precompute_distances']:
+        init_params.pop(p, None)
 
     metadata['init_params'] = init_params
-
-    model_dict = model.__dict__
-    model_dict_keys = list(model_dict.keys())
 
     default_values = {
         '_algorithm': 'lloyd',
@@ -79,40 +64,31 @@ def serialize_k_means(model: KMeans, version_in: str) -> dict:
         'precompute_distances': 'auto'
     }
 
-    other_params = {}
-    
-    for af in all_features:
-        if (af in model_dict_keys) == False:
-            other_params[af] = default_values[af]
-        else:
-            other_params[af] = model_dict[af]
-
-    metadata['other_params'] = other_params
+    metadata['other_params'] = collect_other_params(model, all_features, default_values)
     metadata['version_sklearn_in'] = version_in
 
     return json_convert(metadata)
 
-def deserialize_k_means(data: dict, version_out: str) -> KMeans:
+def _restore_k_means(model_class, data: dict, all_features: list):
     """
-    Reconstruct a KMeans from a serialized dictionary.
+    Reconstruct a KMeans-like model from a serialized dictionary.
 
     Parameters
     ----------
+    model_class : type
+        KMeans or MiniBatchKMeans.
     data : dict
-        Dictionary produced by serialize_k_means.
-    version_out : str
-        The sklearn version of the target environment (e.g. '1.7.0').
+        Dictionary produced by the serializer of model_class.
+    all_features : list
+        Names of the fields to set on the model.
 
     Returns
     -------
-    KMeans
-        A reconstructed scikit-learn KMeans instance.
+    KMeans or MiniBatchKMeans
+        A reconstructed scikit-learn instance of model_class.
     """
-    
-    version_in = data['version_sklearn_in']
-    init_params = data['init_params']
 
-    new_model = KMeans(**init_params)
+    new_model = model_class(**data['init_params'])
 
     array_fields = [
         'cluster_centers_',
@@ -134,3 +110,23 @@ def deserialize_k_means(data: dict, version_out: str) -> KMeans:
         new_model.__dict__[af] = value
 
     return new_model
+
+
+def deserialize_k_means(data: dict, version_out: str) -> KMeans:
+    """
+    Reconstruct a KMeans from a serialized dictionary.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary produced by serialize_k_means.
+    version_out : str
+        The sklearn version of the target environment (e.g. '1.7.0').
+
+    Returns
+    -------
+    KMeans
+        A reconstructed scikit-learn KMeans instance.
+    """
+
+    return _restore_k_means(KMeans, data, all_features)

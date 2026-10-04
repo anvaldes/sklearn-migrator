@@ -1,5 +1,4 @@
 import warnings
-import pandas as pd
 import numpy as np
 from sklearn.svm import SVR
 from ..utils import json_convert
@@ -182,8 +181,4 @@ def deserialize_svr(data: dict, version_out: str) -> Migrated_SVR:
         A reconstructed Migrated_SVR instance compatible with the target environment.
     """
 
-    version_in = data['version_sklearn_in']
-
-    new_model = Migrated_SVR(data)
-
-    return new_model
+    return Migrated_SVR(data)

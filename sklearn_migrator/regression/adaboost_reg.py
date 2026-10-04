@@ -3,12 +3,7 @@ import numpy as np
 from sklearn.ensemble import AdaBoostRegressor
 from ..regression.decision_tree_reg import serialize_decision_tree_reg
 from ..regression.decision_tree_reg import deserialize_decision_tree_reg
-from ..utils import json_convert
-
-import sklearn
-
-version_sklearn = sklearn.__version__
-
+from ..utils import json_convert, collect_other_params
 
 all_features = [
     'n_features_in_',
@@ -36,12 +31,8 @@ def serialize_adaboost_reg(model: AdaBoostRegressor, version_in: str) -> dict:
 
     metadata = {}
 
-    estimators = model.estimators_
-    estimators_ser = [serialize_decision_tree_reg(e, version_in) for e in estimators]
-    params = model.get_params()
-
-    metadata['estimators'] = estimators_ser
-    metadata['params'] = params
+    metadata['estimators'] = [serialize_decision_tree_reg(e, version_in) for e in model.estimators_]
+    metadata['params'] = model.get_params()
 
     metadata['estimator_weights_'] = list(model.estimator_weights_)
     metadata['estimator_errors_'] = list(model.estimator_errors_)
@@ -62,24 +53,13 @@ def serialize_adaboost_reg(model: AdaBoostRegressor, version_in: str) -> dict:
         warnings.warn(f"Could not get field 'n_features_': {type(e).__name__}: {e}")
         metadata['n_features'] = metadata['n_features_in']
 
-    model_dict = model.__dict__
-    model_dict_keys = list(model_dict.keys())
-
     default_values = {
         'n_features_in_': None,
         'feature_names_in_': None,
         'n_features_': None
     }
 
-    other_params = {}
-
-    for af in all_features:
-        if (af in model_dict_keys) == False:
-            other_params[af] = default_values[af]
-        else:
-            other_params[af] = model_dict[af]
-
-    metadata['other_params'] = other_params
+    metadata['other_params'] = collect_other_params(model, all_features, default_values)
     metadata['version_sklearn_in'] = version_in
 
     return json_convert(metadata)
@@ -102,14 +82,9 @@ def deserialize_adaboost_reg(data: dict, version_out: str) -> AdaBoostRegressor:
         A reconstructed scikit-learn AdaBoostRegressor instance.
     """
 
-    pre_model = AdaBoostRegressor()
-    pre_get_params = list(pre_model.get_params().keys())
+    pre_get_params = list(AdaBoostRegressor().get_params().keys())
 
-    get_params = {}
-
-    for param in pre_get_params:
-        if param in list(data['params'].keys()):
-            get_params[param] = data['params'][param]
+    get_params = {param: data['params'][param] for param in pre_get_params if param in data['params']}
 
     if ('estimator' in get_params) and ('base_estimator' in pre_get_params):
         get_params['base_estimator'] = get_params.pop('estimator')

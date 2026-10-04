@@ -1,6 +1,5 @@
-import warnings
-import numpy as np
 from sklearn.cluster import MiniBatchKMeans
+from .k_means import _restore_k_means
 from ..utils import json_convert
 
 all_features = [
@@ -53,17 +52,11 @@ def serialize_mini_batch_kmeans(model: MiniBatchKMeans, version_in: str) -> dict
     init_params = model.get_params()
 
     for p in ['n_jobs', 'precompute_distances', 'algorithm', 'copy_x']:
-        try:
-            del init_params[p]
-        except (KeyError, AttributeError):
-            pass
-        except Exception as e:
-            warnings.warn(f"Could not delete field '{p}': {type(e).__name__}: {e}")
+        init_params.pop(p, None)
 
     metadata['init_params'] = init_params
 
     model_dict = model.__dict__
-    model_dict_keys = list(model_dict.keys())
 
     default_values = {
         'batch_size': getattr(model, 'batch_size', init_params.get('batch_size', 1024)),
@@ -84,15 +77,7 @@ def serialize_mini_batch_kmeans(model: MiniBatchKMeans, version_in: str) -> dict
         'precompute_distances': 'auto'
     }
 
-    other_params = {}
-
-    for af in all_features:
-        if af in model_dict_keys:
-            other_params[af] = model_dict[af]
-        else:
-            other_params[af] = default_values.get(af, None)
-
-    metadata['other_params'] = other_params
+    metadata['other_params'] = {af: model_dict.get(af, default_values.get(af, None)) for af in all_features}
     metadata['version_sklearn_in'] = version_in
 
     return json_convert(metadata)
@@ -115,28 +100,4 @@ def deserialize_mini_batch_kmeans(data: dict, version_out: str) -> MiniBatchKMea
         A reconstructed scikit-learn MiniBatchKMeans instance.
     """
 
-    version_in = data['version_sklearn_in']
-    init_params = data['init_params']
-
-    new_model = MiniBatchKMeans(**init_params)
-
-    array_fields = [
-        'cluster_centers_',
-        'labels_',
-        'feature_names_in_'
-    ]
-
-    other_params = data['other_params']
-
-    for af in all_features:
-        if af not in other_params:
-            continue
-
-        value = other_params[af]
-
-        if af in array_fields and value is not None and not isinstance(value, np.ndarray):
-            value = np.array(value)
-
-        new_model.__dict__[af] = value
-
-    return new_model
+    return _restore_k_means(MiniBatchKMeans, data, all_features)
