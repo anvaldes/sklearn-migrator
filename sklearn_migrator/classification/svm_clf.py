@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 from sklearn.svm import SVC
 from ..utils import json_convert

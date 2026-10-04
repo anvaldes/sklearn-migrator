@@ -1,7 +1,7 @@
 import warnings
 import numpy as np
 from sklearn.decomposition import PCA
-from ..utils import json_convert
+from ..utils import json_convert, collect_other_params
 
 all_features = [
     '_fit_svd_solver',
@@ -47,24 +47,12 @@ def serialize_pca(model: PCA, version_in: str) -> dict:
 
     init_params = model.get_params()
 
-    try:
-        del init_params['n_oversamples']
-    except (KeyError, AttributeError):
-        pass
-    except Exception as e:
-        warnings.warn(f"Could not delete field 'n_oversamples': {type(e).__name__}: {e}")
-
-    try:
-        del init_params['power_iteration_normalizer']
-    except (KeyError, AttributeError):
-        pass
-    except Exception as e:
-        warnings.warn(f"Could not delete field 'power_iteration_normalizer': {type(e).__name__}: {e}")
+    for p in ['n_oversamples', 'power_iteration_normalizer']:
+        init_params.pop(p, None)
 
     metadata['init_params'] = init_params
 
     model_dict = model.__dict__
-    model_dict_keys = list(model_dict.keys())
 
     default_values = {
         'feature_names_in_': None,
@@ -73,13 +61,7 @@ def serialize_pca(model: PCA, version_in: str) -> dict:
         'power_iteration_normalizer': 'auto'
         }
 
-    other_params = {}
-    
-    for af in all_features:
-        if (af in model_dict_keys) == False:
-            other_params[af] = default_values[af]
-        else:
-            other_params[af] = model_dict[af]
+    other_params = collect_other_params(model, all_features, default_values)
 
     metadata['other_params'] = other_params
     metadata['version_sklearn_in'] = version_in
@@ -103,8 +85,7 @@ def deserialize_pca(data: dict, version_out: str) -> PCA:
     PCA
         A reconstructed scikit-learn PCA instance.
     """
-    
-    version_in = data['version_sklearn_in']
+
     init_params = data['init_params']
 
     new_model = PCA(**init_params)

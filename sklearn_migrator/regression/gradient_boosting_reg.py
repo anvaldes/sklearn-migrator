@@ -1,10 +1,10 @@
-import warnings
 import numpy as np
 from sklearn.ensemble import GradientBoostingRegressor
 from .decision_tree_reg import serialize_decision_tree_reg
 from .decision_tree_reg import deserialize_decision_tree_reg
 from sklearn.dummy import DummyRegressor
-from ..utils import json_convert, version_tuple
+from ..utils import json_convert, version_tuple, get_attr_or_none, set_attr_safely
+from ..utils import collect_other_params, restore_other_params, filter_init_params
 
 import sklearn
 
@@ -114,13 +114,8 @@ def serialize_gradient_boosting_reg(model: GradientBoostingRegressor, version_in
 
     metadata = {}
 
-    estimators = model.estimators_
-
-    estimators_ser = [serialize_decision_tree_reg(e[0], version_in) for e in estimators]
-    params = model.get_params()
-
-    metadata['estimators'] = estimators_ser
-    metadata['params'] = params
+    metadata['estimators'] = [serialize_decision_tree_reg(e[0], version_in) for e in model.estimators_]
+    metadata['params'] = model.get_params()
 
     dummy_regressor = {
         'strategy': model.init_.strategy,
@@ -133,20 +128,10 @@ def serialize_gradient_boosting_reg(model: GradientBoostingRegressor, version_in
 
     metadata['loss'] = model.loss
 
-    try:
-        metadata['n_features_in'] = model.n_features_in_
-    except:
-        metadata['n_features_in'] = None
-    
-    try:
-        metadata['n_features'] = model.n_features_
-    except:
-        metadata['n_features'] = None
+    metadata['n_features_in'] = get_attr_or_none(model, 'n_features_in_')
+    metadata['n_features'] = get_attr_or_none(model, 'n_features_')
 
     metadata['train_score_'] = list(model.train_score_)
-
-    model_dict = model.__dict__
-    model_dict_keys = list(model_dict.keys())
 
     default_values = {
         'min_impurity_split': None,
@@ -157,17 +142,7 @@ def serialize_gradient_boosting_reg(model: GradientBoostingRegressor, version_in
         'n_trees_per_iteration_': 1
     }
 
-    kdv = list(default_values.keys())
-
-    other_params = {}
-
-    for af in all_features:
-        if (af in model_dict_keys) == False:
-            other_params[af] = default_values[af]
-        else:
-            other_params[af] = model_dict[af]
-
-    metadata['other_params'] = other_params
+    metadata['other_params'] = collect_other_params(model, all_features, default_values)
     metadata['version_sklearn_in'] = version_in
 
     return json_convert(metadata)
@@ -190,16 +165,7 @@ def deserialize_gradient_boosting_reg(data: dict, version_out: str) -> GradientB
         A reconstructed scikit-learn GradientBoostingRegressor instance.
     """
 
-    pre_model = GradientBoostingRegressor()
-    pre_get_params = list(pre_model.get_params().keys())
-
-    get_params = {}
-
-    for param in pre_get_params:
-        if param in list(data['params'].keys()):
-            get_params[param] = data['params'][param]
-
-    new_model = GradientBoostingRegressor(**get_params)
+    new_model = GradientBoostingRegressor(**filter_init_params(GradientBoostingRegressor, data['params']))
 
     estimators = [[deserialize_decision_tree_reg(e, version_out)] for e in data['estimators']]
 
@@ -214,41 +180,18 @@ def deserialize_gradient_boosting_reg(data: dict, version_out: str) -> GradientB
 
     n_features = (data['n_features'] or data['n_features_in'])
 
-    try:
-        new_model.n_features_ = n_features
-    except (KeyError, AttributeError):
-        pass
-    except Exception as e:
-        warnings.warn(f"Could not set field 'n_features_': {type(e).__name__}: {e}")
+    set_attr_safely(new_model, 'n_features_', n_features, warn=True)
+    set_attr_safely(new_model, 'n_features_in_', n_features, warn=True)
 
-    try:
-        new_model.n_features_in_ = n_features
-    except (KeyError, AttributeError):
-        pass
-    except Exception as e:
-        warnings.warn(f"Could not set field 'n_features_in_': {type(e).__name__}: {e}")
-    
     if (version_tuple(version_out) >= version_tuple('0.21.3')) and (version_tuple(version_out) <= version_tuple('0.23.2')):
         new_model.loss_ = get_loss_object(data['loss'])(1)
     elif (version_tuple(version_out) > version_tuple('0.23.2')) and (version_tuple(version_out) < version_tuple('1.1.0')):
         new_model.loss_ = get_loss_object(data['loss'])()
     else:
         new_model._loss = get_loss_object(data['loss'])()
-    
+
     new_model.train_score_ = data['train_score_']
 
-    for af in all_features:
-        try:
-            new_model.__dict__[af] = data['other_params'][af]
-        except KeyError:
-            pass  # field not present in this sklearn version
-        except AttributeError:
-            pass  # attribute not settable in this sklearn version
-        except Exception as e:
-            warnings.warn(
-                f"Could not set field '{af}' on {type(new_model).__name__}: "
-                f"{type(e).__name__}: {e}. Field will be skipped.",
-                UserWarning,
-            )
+    restore_other_params(new_model, all_features, data)
 
     return new_model
