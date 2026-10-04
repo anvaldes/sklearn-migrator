@@ -1,7 +1,6 @@
-import warnings
 import numpy as np
 from sklearn.linear_model import LogisticRegression
-from ..utils import json_convert
+from ..utils import json_convert, collect_other_params, restore_other_params
 
 all_features = [
     'warm_start',
@@ -18,7 +17,7 @@ all_features = [
     'C',
     'l1_ratio',
     'tol',
-    'n_features_in_', 
+    'n_features_in_',
     'feature_names_in_'
 ]
 
@@ -48,24 +47,13 @@ def serialize_logistic_regression_clf(model: LogisticRegression, version_in: str
         'version_sklearn_in': version_in
     }
 
-    model_dict = model.__dict__
-    model_dict_keys = list(model_dict.keys())
-
     default_values = {
         'n_features_in_': len(model.coef_.tolist()[0]),
         'feature_names_in_': None,
         'multi_class': model.get_params().get('multi_class', None)
     }
 
-    kdv = list(default_values.keys())
-
-    other_params = {}
-
-    for af in all_features:
-        if (af in model_dict_keys) == False:
-            other_params[af] = default_values[af]
-        else:
-            other_params[af] = model_dict[af]
+    other_params = collect_other_params(model, all_features, default_values)
 
     if other_params['multi_class'] == 'deprecated':
         del other_params['multi_class']
@@ -92,24 +80,12 @@ def deserialize_logistic_regression_clf(data: dict, version_out: str) -> Logisti
     """
 
     model = LogisticRegression(data['params'])
-    
+
     model.classes_ = np.array(data['classes_'])
     model.coef_ = np.array(data['coef_'])
     model.intercept_ = np.array(data['intercept_'])
     model.n_iter_ = np.array(data['n_iter_'])
 
-    for af in all_features:
-        try:
-            model.__dict__[af] = data['other_params'][af]
-        except KeyError:
-            pass  # field not present in this sklearn version
-        except AttributeError:
-            pass  # attribute not settable in this sklearn version
-        except Exception as e:
-            warnings.warn(
-                f"Could not set field '{af}' on {type(model).__name__}: "
-                f"{type(e).__name__}: {e}. Field will be skipped.",
-                UserWarning,
-            )
+    restore_other_params(model, all_features, data)
 
     return model

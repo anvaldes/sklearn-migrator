@@ -36,39 +36,13 @@ def serialize_agglomerative(model: AgglomerativeClustering, version_in: str) -> 
     if 'metric' not in init_params and 'affinity' in init_params:
         init_params['metric'] = init_params['affinity']
 
-    try:
-        del init_params['affinity']
-    except KeyError:
-        pass
+    init_params.pop('affinity', None)
 
     metadata['init_params'] = init_params
 
     model_dict = model.__dict__
-    model_keys = list(model_dict.keys())
 
-    default_values = {
-        'n_features_in_': None,
-        'labels_': None,
-        'n_connected_components_': None,
-        'children_': None,
-        'distances_': None,
-        'feature_names_in_': None,
-    }
-
-    other_params = {}
-
-    for af in all_features:
-        if af in model_keys:
-            val = model_dict[af]
-        else:
-            val = default_values.get(af, None)
-
-        if isinstance(val, np.ndarray):
-            val = val.tolist()
-
-        other_params[af] = val
-
-    metadata['other_params'] = other_params
+    metadata['other_params'] = {af: model_dict.get(af, None) for af in all_features}
     metadata['version_sklearn_in'] = version_in
 
     return json_convert(metadata)
@@ -126,11 +100,7 @@ def deserialize_agglomerative(data: dict, version_out: str) -> AgglomerativeClus
     ]
 
     for af, value in other_params.items():
-        if value is None:
-            new_model.__dict__[af] = None
-            continue
-
-        if af in array_fields and not isinstance(value, np.ndarray):
+        if value is not None and af in array_fields and not isinstance(value, np.ndarray):
             value = np.array(value)
 
         new_model.__dict__[af] = value
